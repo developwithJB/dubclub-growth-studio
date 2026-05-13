@@ -22,6 +22,10 @@ export type GrowthPack = {
   pushNotification: string;
   xTeaser: string;
   discordSms: string;
+  shortFormHook: string;
+  shortFormScript: string;
+  shortFormCaption: string;
+  audioRead: string;
   responsiblePlayNote: string;
   suggestedSendTime: string;
   audienceSegment: string;
