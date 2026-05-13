@@ -4,7 +4,7 @@ From raw capper signal to subscriber action.
 
 [Live demo](https://developwithjb.github.io/dubclub-growth-studio/)
 
-DubClub Growth Studio is a mobile-first founder-demo prototype for an AI-assisted creator growth workflow. It helps sports betting creators turn raw pick shorthand into structured play cards, multi-channel subscriber content, fan-facing updates, and lightweight performance insight.
+DubClub Growth Studio is a mobile-first founder-demo prototype for an AI-assisted creator growth workflow. It helps sports betting creators turn raw pick shorthand into structured play reviews, multi-channel growth assets, fan-facing updates, and lightweight performance insight.
 
 The capper remains the source of truth. Growth Studio does not make picks, place bets, integrate with sportsbooks, or act as an odds engine. It improves structure, clarity, distribution, and learning around the capper's own signal.
 
@@ -14,19 +14,30 @@ DubClub already helps cappers monetize and distribute plays. Growth Studio moves
 
 The bet is not that AI helps cappers make better picks. The bet is that structured publishing helps cappers publish faster, fans act with more trust, and DubClub gets cleaner data for notifications, tailing, recaps, retention, and creator coaching.
 
-## Core Flow
+## Current Demo Flow
 
 1. **Studio**  
-   Turn messy capper shorthand into a structured play review.
+   Choose one of four read-only event-backed sample signals, generate a structured play review, then approve publishable reviews into Growth Pack.
 
 2. **Growth Pack**  
-   Convert one structured play into a DubClub post, push notification, X teaser, Discord/SMS blurb, responsible play note, audience segment, send time, and business goal.
+   Convert one approved play into channel-ready assets for DubClub, push, X, Discord/SMS, YouTube Shorts, IG/TikTok, and audio.
 
 3. **Trust Inbox**  
-   Show how subscribers receive structured plays and tail publishable picks.
+   Show how subscribers receive structured plays, confirm the line, and tail only publishable picks.
 
 4. **Insights**  
-   Close the loop with creator performance metrics and next-action coaching.
+   Close the loop with mock creator performance metrics, channel performance, and next-action coaching.
+
+## Studio Samples
+
+The prototype uses real event context with mocked pick lines and mocked AI behavior:
+
+- **NBA Playoff Sample**: San Antonio at Minnesota, Game 6, Friday, May 15, 2026.
+- **WNBA Sample**: Minnesota Lynx at Dallas Wings, Thursday, May 14, 2026.
+- **NHL Playoff Sample**: Vegas Golden Knights at Anaheim Ducks, Game 6, Thursday, May 14, 2026.
+- **Held MLB Hype Draft**: San Francisco Giants at Los Angeles Dodgers, Thursday, May 14, 2026.
+
+Event schedules are used for demo context only. Pick lines, reasoning, quality scores, and generated content are deterministic mock data.
 
 ## Publishability Gate
 
@@ -36,9 +47,18 @@ The prototype uses a simple local rule:
 qualityScore >= 70
 ```
 
-Publishable plays can enter the Growth Pack and Trust Inbox. Low-quality or hype-heavy drafts are held before fan delivery.
+Publishable plays show an `Approve & Build Growth Pack` action. Low-quality or hype-heavy drafts are held before Growth Pack delivery, Trust Inbox delivery, and fan tailing.
 
-The default Brunson example is publishable. The Lakers "Hammer... Lock" example is intentionally held because it lacks unit size, price, opponent, reasoning, and a playable-to number.
+The MLB Dodgers hype draft is intentionally held because it lacks unit size, price, starting-pitcher context, reasoning, and a playable-to number.
+
+## What The Prototype Demonstrates
+
+- AI-assisted structuring without AI-generated picks.
+- Human-in-the-loop capper review before distribution.
+- A clear path from review approval into multi-channel growth assets.
+- Fan-facing trust cards that only expose publishable plays.
+- Channel-level growth thinking across text, audio, and short-form video.
+- Strategic restraint: no backend, no auth, no sportsbook integrations, and no live odds infrastructure.
 
 ## Tech Stack
 
@@ -73,15 +93,16 @@ Build check:
 npm run build
 ```
 
-## Demo Path
+## Recommended Live Path
 
 1. Open Studio.
-2. Generate the default Brunson structured play.
-3. Review the quality score, missing details, risk flag, and human review note.
-4. Open Growth Pack and show the generated channel assets.
-5. Open Trust Inbox and tail the Brunson play.
-6. Open Insights and show the performance loop.
-7. Return to Studio, generate the hype-heavy Lakers example, and show that Growth Studio holds the draft before fan delivery.
+2. Generate the NBA Playoff sample.
+3. Review the quality score, event details, missing details, and risk flag.
+4. Click `Approve & Build Growth Pack`.
+5. Filter Growth Pack by short-form or audio to show multi-channel actionability.
+6. Open Trust Inbox and tail a publishable play.
+7. Open Insights and show the creator performance loop.
+8. Return to Studio, generate the Held MLB Hype Draft, and show that Growth Studio blocks incomplete/hype-heavy content before fan delivery.
 
 ## Full Overview
 
