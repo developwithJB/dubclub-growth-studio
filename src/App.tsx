@@ -401,15 +401,70 @@ function GrowthPackTab({ play }: { play: StructuredPlay | null }) {
   const displayPlay = play ?? brunsonDemoPlay;
   const publishable = isPublishablePlay(displayPlay);
   const pack = generateGrowthPack(displayPlay);
-  const cards: Array<{ title: string; value: string; icon: JSX.Element }> = [
-    { title: "DubClub Post", value: pack.dubClubPost, icon: <Send size={18} /> },
-    { title: "Push Notification", value: pack.pushNotification, icon: <Zap size={18} /> },
-    { title: "X Teaser", value: pack.xTeaser, icon: <Sparkles size={18} /> },
-    { title: "Discord/SMS Blurb", value: pack.discordSms, icon: <Inbox size={18} /> },
-    { title: "Responsible Play Note", value: pack.responsiblePlayNote, icon: <ShieldCheck size={18} /> },
-    { title: "Suggested Send Time", value: pack.suggestedSendTime, icon: <Clock size={18} /> },
-    { title: "Audience Segment", value: pack.audienceSegment, icon: <Users size={18} /> },
-    { title: "Business Goal", value: pack.businessGoal, icon: <Target size={18} /> }
+  const [completedActions, setCompletedActions] = useState<string[]>([]);
+  const cards: Array<{
+    title: string;
+    value: string;
+    icon: JSX.Element;
+    cta: string;
+    doneLabel: string;
+  }> = [
+    {
+      title: "DubClub Post",
+      value: pack.dubClubPost,
+      icon: <Send size={18} />,
+      cta: "Queue DubClub Post",
+      doneLabel: "Post queued"
+    },
+    {
+      title: "Push Notification",
+      value: pack.pushNotification,
+      icon: <Zap size={18} />,
+      cta: "Schedule Push",
+      doneLabel: "Push scheduled"
+    },
+    {
+      title: "X Teaser",
+      value: pack.xTeaser,
+      icon: <Sparkles size={18} />,
+      cta: "Copy X Teaser",
+      doneLabel: "Teaser copied"
+    },
+    {
+      title: "Discord/SMS Blurb",
+      value: pack.discordSms,
+      icon: <Inbox size={18} />,
+      cta: "Queue Blurb",
+      doneLabel: "Blurb queued"
+    },
+    {
+      title: "Responsible Play Note",
+      value: pack.responsiblePlayNote,
+      icon: <ShieldCheck size={18} />,
+      cta: "Attach Note",
+      doneLabel: "Note attached"
+    },
+    {
+      title: "Suggested Send Time",
+      value: pack.suggestedSendTime,
+      icon: <Clock size={18} />,
+      cta: "Use Send Time",
+      doneLabel: "Send time selected"
+    },
+    {
+      title: "Audience Segment",
+      value: pack.audienceSegment,
+      icon: <Users size={18} />,
+      cta: "Apply Segment",
+      doneLabel: "Segment applied"
+    },
+    {
+      title: "Business Goal",
+      value: pack.businessGoal,
+      icon: <Target size={18} />,
+      cta: "Track Goal",
+      doneLabel: "Goal tracked"
+    }
   ];
 
   return (
@@ -420,6 +475,7 @@ function GrowthPackTab({ play }: { play: StructuredPlay | null }) {
         chip="Package once, distribute everywhere"
       />
       <DoorDashAnalogyCard />
+      <GrowthSourceCard play={displayPlay} publishable={publishable} />
       {!publishable ? (
         <HeldDraftWarning>
           Draft held. Growth Studio will not generate subscriber-ready delivery until required
@@ -428,10 +484,57 @@ function GrowthPackTab({ play }: { play: StructuredPlay | null }) {
       ) : null}
       <div className="grid gap-3">
         {cards.map((card) => (
-          <GrowthCard key={card.title} {...card} lowQuality={!publishable} />
+          <GrowthCard
+            key={card.title}
+            {...card}
+            actioned={completedActions.includes(`${displayPlay.id}:${card.title}`)}
+            disabled={!publishable}
+            lowQuality={!publishable}
+            onAction={() => {
+              const actionId = `${displayPlay.id}:${card.title}`;
+              setCompletedActions((current) =>
+                current.includes(actionId) ? current : [...current, actionId]
+              );
+            }}
+          />
         ))}
       </div>
     </div>
+  );
+}
+
+function GrowthSourceCard({
+  play,
+  publishable
+}: {
+  play: StructuredPlay;
+  publishable: boolean;
+}) {
+  return (
+    <section
+      className={`rounded-2xl border p-4 ${
+        publishable ? "border-dub-green/25 bg-dub-green/10" : "border-dub-amber/35 bg-dub-amber/10"
+      }`}
+    >
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-dub-muted">
+        Generated from Studio
+      </p>
+      <div className="mt-2 flex items-center justify-between gap-3">
+        <div>
+          <p className="text-[16px] font-black leading-tight text-white">{playTitle(play)}</p>
+          <p className="mt-1 text-xs font-bold text-dub-muted">
+            Quality score {play.qualityScore} · {publishable ? "ready for action" : "held draft"}
+          </p>
+        </div>
+        <span
+          className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${
+            publishable ? "bg-dub-green text-black" : "bg-dub-amber text-black"
+          }`}
+        >
+          {publishable ? "Actionable" : "Held"}
+        </span>
+      </div>
+    </section>
   );
 }
 
@@ -463,12 +566,22 @@ function GrowthCard({
   title,
   value,
   icon,
-  lowQuality
+  cta,
+  doneLabel,
+  actioned,
+  disabled,
+  lowQuality,
+  onAction
 }: {
   title: string;
   value: string;
   icon: JSX.Element;
+  cta: string;
+  doneLabel: string;
+  actioned: boolean;
+  disabled: boolean;
   lowQuality: boolean;
+  onAction: () => void;
 }) {
   return (
     <article
@@ -487,6 +600,21 @@ function GrowthCard({
         <h3 className="text-[15px] font-black text-white">{title}</h3>
       </div>
       <p className="text-sm font-semibold leading-relaxed text-white/82">{value}</p>
+      <button
+        type="button"
+        onClick={onAction}
+        disabled={disabled || actioned}
+        className={`mt-4 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-black transition ${
+          actioned
+            ? "bg-dub-green text-black"
+            : disabled
+              ? "cursor-not-allowed border border-dub-amber/25 bg-dub-amber/10 text-dub-amber"
+              : "bg-dub-green text-black shadow-glow hover:bg-white"
+        }`}
+      >
+        {actioned ? <Check size={17} /> : null}
+        {actioned ? doneLabel : disabled ? "Held for details" : cta}
+      </button>
     </article>
   );
 }

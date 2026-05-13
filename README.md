@@ -2,6 +2,8 @@
 
 From raw capper signal to subscriber action.
 
+[Live demo](https://developwithjb.github.io/dubclub-growth-studio/)
+
 DubClub Growth Studio is a mobile-first founder-demo prototype for an AI-assisted creator growth workflow. It helps sports betting creators turn raw pick shorthand into structured play cards, multi-channel subscriber content, fan-facing updates, and lightweight performance insight.
 
 The capper remains the source of truth. Growth Studio does not make picks, place bets, integrate with sportsbooks, or act as an odds engine. It improves structure, clarity, distribution, and learning around the capper's own signal.
