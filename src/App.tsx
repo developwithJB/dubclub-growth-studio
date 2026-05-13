@@ -94,10 +94,12 @@ function App() {
   }, [activeTab, confirmationId, play, rawInput, tailedPlays]);
 
   return (
-    <div className="min-h-screen bg-[#050506] text-white sm:flex sm:items-center sm:justify-center sm:p-5">
-      <section className="relative mx-auto flex min-h-svh w-full max-w-[430px] flex-col overflow-hidden bg-dub-ink sm:h-[900px] sm:min-h-0 sm:rounded-[38px] sm:border sm:border-white/10 sm:shadow-2xl">
+    <div className="h-dvh overflow-hidden bg-[#050506] text-white sm:flex sm:items-center sm:justify-center sm:p-5">
+      <section className="relative mx-auto flex h-full min-h-0 w-full max-w-[430px] flex-col overflow-hidden bg-dub-ink sm:max-h-[900px] sm:rounded-[38px] sm:border sm:border-white/10 sm:shadow-2xl">
         <AppHeader />
-        <div className="flex-1 overflow-y-auto px-5 pb-36 pt-5">{activeView}</div>
+        <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-6 pt-5">
+          {activeView}
+        </main>
         <BottomTabs activeTab={activeTab} onChange={setActiveTab} />
       </section>
     </div>
@@ -145,7 +147,7 @@ function ProductLoopMini() {
 
 function BottomTabs({ activeTab, onChange }: { activeTab: Tab; onChange: (tab: Tab) => void }) {
   return (
-    <nav className="safe-bottom absolute inset-x-0 bottom-0 border-t border-dub-border/80 bg-[#0b0b0d]/95 px-3 pt-2 backdrop-blur">
+    <nav className="safe-bottom shrink-0 border-t border-dub-border/80 bg-[#0b0b0d]/95 px-3 pt-2 backdrop-blur">
       <div className="grid grid-cols-4 items-end gap-1">
         {tabs.map((tab) => {
           const Icon = tab.icon;
