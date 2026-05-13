@@ -1,8 +1,12 @@
 export type PlayStatus = "Needs Review" | "Needs More Detail" | "Active" | "Line-sensitive";
 
+export type PlaySource = "nba-playoff" | "wnba" | "nhl-playoff" | "mlb-hype";
+
 export type StructuredPlay = {
   id: string;
-  source: "brunson" | "lakers";
+  source: PlaySource;
+  eventLabel: string;
+  eventDate: string;
   player?: string;
   pick: string;
   sport: string;

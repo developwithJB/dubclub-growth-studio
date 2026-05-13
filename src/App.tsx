@@ -63,7 +63,7 @@ const growthChannels: GrowthChannel[] = [
   "Audio"
 ];
 
-const brunsonDemoPlay = generateStructuredPlay(examples.strong);
+const defaultDemoPlay = generateStructuredPlay(examples.nbaPlayoff);
 const PUBLISHABLE_SCORE = 70;
 
 const isPublishablePlay = (play: StructuredPlay | null | undefined) =>
@@ -78,7 +78,7 @@ const scoreTone = (score: number) =>
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>("studio");
-  const [rawInput, setRawInput] = useState(examples.strong);
+  const [rawInput, setRawInput] = useState(examples.nbaPlayoff);
   const [play, setPlay] = useState<StructuredPlay | null>(null);
   const [tailedPlays, setTailedPlays] = useState<InboxPlay[]>([]);
   const [confirmationId, setConfirmationId] = useState<string | null>(null);
@@ -117,6 +117,7 @@ function App() {
           setPlay(null);
         }}
         onGenerate={() => setPlay(generateStructuredPlay(rawInput))}
+        onApprove={() => setActiveTab("growth")}
       />
     );
   }, [activeTab, confirmationId, play, rawInput, tailedPlays]);
@@ -224,31 +225,64 @@ function StudioTab({
   rawInput,
   play,
   onRawInputChange,
-  onGenerate
+  onGenerate,
+  onApprove
 }: {
   rawInput: string;
   play: StructuredPlay | null;
   onRawInputChange: (value: string) => void;
   onGenerate: () => void;
+  onApprove: () => void;
 }) {
   const reviewRef = useRef<HTMLDivElement | null>(null);
-  const activeSample = rawInput === examples.hype ? "hype" : "strong";
   const sampleOptions = [
     {
-      id: "strong",
-      label: "Publishable prop sample",
-      description: "Complete enough to become subscriber-ready.",
-      value: examples.strong,
-      tone: "green"
+      id: "nba-playoff",
+      label: "NBA Playoff Sample",
+      event: "Spurs at Timberwolves, Game 6",
+      date: "Fri, May 15",
+      description: "Publishable player prop for the next official NBA playoff game.",
+      value: examples.nbaPlayoff,
+      sport: "NBA",
+      tone: "green",
+      status: "Publishable"
     },
     {
-      id: "hype",
-      label: "Held hype draft",
-      description: "Shows how Growth Studio blocks weak inputs.",
-      value: examples.hype,
-      tone: "amber"
+      id: "wnba",
+      label: "WNBA Sample",
+      event: "Lynx at Wings",
+      date: "Thu, May 14",
+      description: "Publishable early-season usage angle.",
+      value: examples.wnba,
+      sport: "WNBA",
+      tone: "green",
+      status: "Publishable"
+    },
+    {
+      id: "nhl-playoff",
+      label: "NHL Playoff Sample",
+      event: "Golden Knights at Ducks, Game 6",
+      date: "Thu, May 14",
+      description: "Publishable playoff total with risk note.",
+      value: examples.nhlPlayoff,
+      sport: "NHL",
+      tone: "green",
+      status: "Publishable"
+    },
+    {
+      id: "mlb-hype",
+      label: "Held MLB Hype Draft",
+      event: "Giants at Dodgers",
+      date: "Thu, May 14",
+      description: "Incomplete hype draft held before fan delivery.",
+      value: examples.mlbHype,
+      sport: "MLB",
+      tone: "amber",
+      status: "Held"
     }
   ];
+  const activeSample =
+    sampleOptions.find((sample) => sample.value === rawInput)?.id ?? sampleOptions[0].id;
 
   useEffect(() => {
     if (!play) {
@@ -264,7 +298,7 @@ function StudioTab({
     <div className="space-y-4">
       <PageIntro
         title="Studio"
-        subtitle="Pick a sample signal and generate the capper review."
+        subtitle="Pick a real event sample and generate the capper review."
         chip="Local sample workflow"
       />
 
@@ -323,7 +357,29 @@ function StudioTab({
                     }`}
                   />
                 </div>
-                <p className="mt-2 text-[11px] font-semibold leading-snug text-dub-muted">
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  <span
+                    className={`rounded-full px-2 py-1 text-[9px] font-black uppercase tracking-[0.08em] ${
+                      isAmber ? "bg-dub-amber/15 text-dub-amber" : "bg-dub-green/15 text-dub-green"
+                    }`}
+                  >
+                    {sample.sport}
+                  </span>
+                  <span className="rounded-full bg-white/8 px-2 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-white">
+                    {sample.date}
+                  </span>
+                  <span
+                    className={`rounded-full px-2 py-1 text-[9px] font-black uppercase tracking-[0.08em] ${
+                      isAmber ? "bg-dub-amber text-black" : "bg-dub-green text-black"
+                    }`}
+                  >
+                    {sample.status}
+                  </span>
+                </div>
+                <p className="mt-2 text-[11px] font-black leading-snug text-white">
+                  {sample.event}
+                </p>
+                <p className="mt-1.5 text-[11px] font-semibold leading-snug text-dub-muted">
                   {sample.description}
                 </p>
               </button>
@@ -342,7 +398,8 @@ function StudioTab({
           </div>
           <p className="mt-3 text-[15px] font-black leading-relaxed text-white">{rawInput}</p>
           <p className="mt-3 text-xs font-bold text-dub-muted">
-            This prototype uses local sample signals only.
+            This prototype uses local sample signals only. Event schedules are real; pick lines are
+            mocked for the prototype.
           </p>
         </div>
 
@@ -358,14 +415,20 @@ function StudioTab({
 
       {play ? (
         <div ref={reviewRef} className="scroll-mt-4">
-          <StructuredReviewCard play={play} />
+          <StructuredReviewCard play={play} onApprove={onApprove} />
         </div>
       ) : null}
     </div>
   );
 }
 
-function StructuredReviewCard({ play }: { play: StructuredPlay }) {
+function StructuredReviewCard({
+  play,
+  onApprove
+}: {
+  play: StructuredPlay;
+  onApprove?: () => void;
+}) {
   const publishable = isPublishablePlay(play);
 
   return (
@@ -400,7 +463,42 @@ function StructuredReviewCard({ play }: { play: StructuredPlay }) {
         </div>
       </div>
 
+      <div
+        className={`mt-5 rounded-2xl border p-4 ${
+          publishable ? "border-dub-green/35 bg-dub-green/10" : "border-dub-amber/45 bg-dub-amber/10"
+        }`}
+      >
+        <p
+          className={`text-xs font-black uppercase tracking-[0.18em] ${
+            publishable ? "text-dub-green" : "text-dub-amber"
+          }`}
+        >
+          Next step
+        </p>
+        <p className="mt-2 text-sm font-black leading-relaxed text-white">
+          {publishable
+            ? "Approved review unlocks Growth Pack assets."
+            : "Missing detail blocks subscriber delivery."}
+        </p>
+        {publishable && onApprove ? (
+          <button
+            type="button"
+            onClick={onApprove}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-dub-green px-4 py-3 text-sm font-black text-black shadow-glow transition hover:bg-white"
+          >
+            <Package size={18} strokeWidth={2.8} />
+            Approve &amp; Build Growth Pack
+          </button>
+        ) : (
+          <p className="mt-3 rounded-xl border border-dub-amber/35 bg-black/25 px-3 py-2 text-center text-xs font-black text-dub-amber">
+            Draft held before Growth Pack
+          </p>
+        )}
+      </div>
+
       <div className="mt-5 grid grid-cols-2 gap-3">
+        <Field label="Event" value={play.eventLabel} />
+        <Field label="Date" value={play.eventDate} />
         {play.player ? <Field label="Player" value={play.player} /> : null}
         <Field label="Sport" value={play.sport} />
         <Field label="Market" value={play.market} />
@@ -499,7 +597,7 @@ function StructuredReviewCard({ play }: { play: StructuredPlay }) {
 }
 
 function GrowthPackTab({ play }: { play: StructuredPlay | null }) {
-  const displayPlay = play ?? brunsonDemoPlay;
+  const displayPlay = play ?? defaultDemoPlay;
   const publishable = isPublishablePlay(displayPlay);
   const pack = generateGrowthPack(displayPlay);
   const [completedActions, setCompletedActions] = useState<string[]>([]);
@@ -905,7 +1003,7 @@ function TrustInboxTab({
       />
       {heldDraft ? (
         <HeldDraftWarning>
-          {`Latest draft held: ${heldDraft.pick} needs unit size, price, opponent, reasoning, and playable-to number before subscribers see it.`}
+          {`Latest draft held: ${heldDraft.pick} needs unit size, price, event context, reasoning, and playable-to number before subscribers see it.`}
         </HeldDraftWarning>
       ) : null}
       <TrustActionGuide />
