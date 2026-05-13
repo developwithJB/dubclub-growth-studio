@@ -1,14 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import {
   AlertTriangle,
   BarChart3,
   Bell,
   Bookmark,
+  Captions,
   Check,
+  Clapperboard,
   Clock,
   ClipboardCheck,
   Inbox,
   Lightbulb,
+  Mic,
   Package,
   Plus,
   Send,
@@ -16,6 +20,7 @@ import {
   Sparkles,
   Target,
   Users,
+  Video,
   Wand2,
   Zap
 } from "lucide-react";
@@ -30,12 +35,32 @@ import {
 import type { InboxPlay, StructuredPlay } from "./types";
 
 type Tab = "studio" | "growth" | "trust" | "insights";
+type GrowthChannel =
+  | "All"
+  | "DubClub"
+  | "Push"
+  | "X"
+  | "Discord"
+  | "YouTube Shorts"
+  | "IG/TikTok"
+  | "Audio";
 
 const tabs: Array<{ id: Tab; label: string; icon: typeof Wand2 }> = [
   { id: "studio", label: "Studio", icon: Wand2 },
   { id: "growth", label: "Growth Pack", icon: Package },
   { id: "trust", label: "Trust Inbox", icon: Inbox },
   { id: "insights", label: "Insights", icon: BarChart3 }
+];
+
+const growthChannels: GrowthChannel[] = [
+  "All",
+  "DubClub",
+  "Push",
+  "X",
+  "Discord",
+  "YouTube Shorts",
+  "IG/TikTok",
+  "Audio"
 ];
 
 const brunsonDemoPlay = generateStructuredPlay(examples.strong);
@@ -87,7 +112,10 @@ function App() {
       <StudioTab
         rawInput={rawInput}
         play={play}
-        onRawInputChange={setRawInput}
+        onRawInputChange={(value) => {
+          setRawInput(value);
+          setPlay(null);
+        }}
         onGenerate={() => setPlay(generateStructuredPlay(rawInput))}
       />
     );
@@ -133,14 +161,26 @@ function AppHeader() {
 }
 
 function ProductLoopMini() {
+  const steps = ["Raw", "Review", "Pack", "Fan", "Insight"];
+
   return (
     <section className="rounded-2xl border border-white/10 bg-black/25 p-3">
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-dub-muted">
-        Product Loop
-      </p>
-      <p className="mt-2 text-[13px] font-black leading-snug text-white">
-        Raw Signal &rarr; Structured Play &rarr; Growth Pack &rarr; Fan Action &rarr; Insight
-      </p>
+      <div className="flex items-center justify-between gap-1">
+        {steps.map((step, index) => (
+          <div key={step} className="flex min-w-0 flex-1 items-center gap-1">
+            <span
+              className={`block min-w-0 flex-1 rounded-full px-2 py-1.5 text-center text-[10px] font-black uppercase tracking-[0.08em] ${
+                index === 0 ? "bg-dub-green text-black" : "bg-white/8 text-white"
+              }`}
+            >
+              {step}
+            </span>
+            {index < steps.length - 1 ? (
+              <span className="shrink-0 text-[10px] font-black text-dub-muted">&rarr;</span>
+            ) : null}
+          </div>
+        ))}
+      </div>
     </section>
   );
 }
@@ -192,6 +232,23 @@ function StudioTab({
   onGenerate: () => void;
 }) {
   const reviewRef = useRef<HTMLDivElement | null>(null);
+  const activeSample = rawInput === examples.hype ? "hype" : "strong";
+  const sampleOptions = [
+    {
+      id: "strong",
+      label: "Publishable prop sample",
+      description: "Complete enough to become subscriber-ready.",
+      value: examples.strong,
+      tone: "green"
+    },
+    {
+      id: "hype",
+      label: "Held hype draft",
+      description: "Shows how Growth Studio blocks weak inputs.",
+      value: examples.hype,
+      tone: "amber"
+    }
+  ];
 
   useEffect(() => {
     if (!play) {
@@ -204,48 +261,90 @@ function StudioTab({
   }, [play]);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <PageIntro
         title="Studio"
-        subtitle="From raw capper signal to subscriber action."
-        chip="Creator growth layer, not odds engine"
+        subtitle="Pick a sample signal and generate the capper review."
+        chip="Local sample workflow"
       />
 
-      <section className="rounded-[22px] border border-white/10 bg-[linear-gradient(145deg,rgba(54,255,34,0.18),rgba(32,32,36,0.86)_42%,rgba(9,9,10,0.96))] p-5 shadow-glow">
-        <h2 className="text-[28px] font-black leading-[1.02] tracking-tight text-white">
-          Turn messy capper shorthand into a trusted play card.
-        </h2>
-        <p className="mt-3 text-[14px] font-semibold leading-relaxed text-white/78">
-          Paste the raw thought, generate structure, then review before anything reaches fans.
+      <section className="rounded-[24px] border border-dub-green/25 bg-[linear-gradient(145deg,rgba(54,255,34,0.20),rgba(23,23,25,0.92)_48%,rgba(5,5,6,0.98))] p-5 shadow-glow">
+        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-dub-green">
+          Growth Studio
         </p>
+        <h2 className="mt-3 text-[34px] font-black leading-[0.96] tracking-tight text-white">
+          Raw signal <span className="text-dub-green">&rarr;</span> trusted play card
+        </h2>
+        <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-stretch gap-2">
+          <div className="rounded-2xl border border-white/10 bg-black/30 p-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-dub-muted">
+              Before
+            </p>
+            <p className="mt-2 text-sm font-black leading-tight text-white">Messy shorthand</p>
+          </div>
+          <div className="grid place-items-center text-dub-green">
+            <Wand2 size={20} strokeWidth={3} />
+          </div>
+          <div className="rounded-2xl border border-dub-green/30 bg-dub-green/10 p-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-dub-green">
+              After
+            </p>
+            <p className="mt-2 text-sm font-black leading-tight text-white">Capper review</p>
+          </div>
+        </div>
       </section>
 
       <ProductLoopMini />
 
       <section className="space-y-3">
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => onRawInputChange(examples.strong)}
-            className="flex-1 rounded-xl border border-dub-border bg-dub-card px-3 py-2 text-sm font-bold text-white transition hover:border-dub-green/60"
-          >
-            Strong pick shorthand
-          </button>
-          <button
-            type="button"
-            onClick={() => onRawInputChange(examples.hype)}
-            className="flex-1 rounded-xl border border-dub-border bg-dub-card px-3 py-2 text-sm font-bold text-white transition hover:border-dub-amber/60"
-          >
-            Hype-heavy post
-          </button>
+        <div className="grid grid-cols-2 gap-2">
+          {sampleOptions.map((sample) => {
+            const isSelected = activeSample === sample.id;
+            const isAmber = sample.tone === "amber";
+
+            return (
+              <button
+                key={sample.id}
+                type="button"
+                onClick={() => onRawInputChange(sample.value)}
+                className={`rounded-2xl border p-3 text-left transition ${
+                  isSelected
+                    ? isAmber
+                      ? "border-dub-amber/65 bg-dub-amber/10"
+                      : "border-dub-green/65 bg-dub-green/10 shadow-glow"
+                    : "border-dub-border bg-dub-card hover:border-white/25"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-[13px] font-black leading-tight text-white">{sample.label}</p>
+                  <span
+                    className={`mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full ${
+                      isSelected ? (isAmber ? "bg-dub-amber" : "bg-dub-green") : "bg-white/20"
+                    }`}
+                  />
+                </div>
+                <p className="mt-2 text-[11px] font-semibold leading-snug text-dub-muted">
+                  {sample.description}
+                </p>
+              </button>
+            );
+          })}
         </div>
 
-        <textarea
-          value={rawInput}
-          onChange={(event) => onRawInputChange(event.target.value)}
-          rows={5}
-          className="w-full resize-none rounded-2xl border border-dub-border bg-dub-card p-4 text-[16px] font-semibold leading-relaxed text-white outline-none transition placeholder:text-dub-muted focus:border-dub-green/70 focus:ring-2 focus:ring-dub-green/15"
-        />
+        <div className="rounded-2xl border border-dub-border bg-dub-card p-4">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-dub-muted">
+              Selected raw signal
+            </p>
+            <span className="rounded-full border border-white/10 bg-black/25 px-2.5 py-1 text-[10px] font-black text-dub-muted">
+              Read-only
+            </span>
+          </div>
+          <p className="mt-3 text-[15px] font-black leading-relaxed text-white">{rawInput}</p>
+          <p className="mt-3 text-xs font-bold text-dub-muted">
+            This prototype uses local sample signals only.
+          </p>
+        </div>
 
         <button
           type="button"
@@ -404,70 +503,151 @@ function GrowthPackTab({ play }: { play: StructuredPlay | null }) {
   const publishable = isPublishablePlay(displayPlay);
   const pack = generateGrowthPack(displayPlay);
   const [completedActions, setCompletedActions] = useState<string[]>([]);
-  const cards: Array<{
+  const [activeChannel, setActiveChannel] = useState<GrowthChannel>("All");
+
+  const sections: Array<{
     title: string;
-    value: string;
-    icon: JSX.Element;
-    cta: string;
-    doneLabel: string;
+    eyebrow: string;
+    cards: Array<{
+      title: string;
+      value: string;
+      icon: JSX.Element;
+      cta: string;
+      doneLabel: string;
+      channels: GrowthChannel[];
+    }>;
   }> = [
     {
-      title: "DubClub Post",
-      value: pack.dubClubPost,
-      icon: <Send size={18} />,
-      cta: "Queue DubClub Post",
-      doneLabel: "Post queued"
+      title: "Text Delivery",
+      eyebrow: "Subscriber and social distribution",
+      cards: [
+        {
+          title: "DubClub Post",
+          value: pack.dubClubPost,
+          icon: <Send size={18} />,
+          cta: "Queue DubClub Post",
+          doneLabel: "Post queued",
+          channels: ["DubClub"]
+        },
+        {
+          title: "Push Notification",
+          value: pack.pushNotification,
+          icon: <Zap size={18} />,
+          cta: "Schedule Push",
+          doneLabel: "Push scheduled",
+          channels: ["Push"]
+        },
+        {
+          title: "X Teaser",
+          value: pack.xTeaser,
+          icon: <Sparkles size={18} />,
+          cta: "Copy X Teaser",
+          doneLabel: "Teaser copied",
+          channels: ["X"]
+        },
+        {
+          title: "Discord/SMS Blurb",
+          value: pack.discordSms,
+          icon: <Inbox size={18} />,
+          cta: "Queue Blurb",
+          doneLabel: "Blurb queued",
+          channels: ["Discord"]
+        }
+      ]
     },
     {
-      title: "Push Notification",
-      value: pack.pushNotification,
-      icon: <Zap size={18} />,
-      cta: "Schedule Push",
-      doneLabel: "Push scheduled"
+      title: "Short-Form Video",
+      eyebrow: "YouTube Shorts, IG Reels, and TikTok",
+      cards: [
+        {
+          title: "Video Hook",
+          value: pack.shortFormHook,
+          icon: <Clapperboard size={18} />,
+          cta: "Queue Short-Form",
+          doneLabel: "Short-form queued",
+          channels: ["YouTube Shorts", "IG/TikTok"]
+        },
+        {
+          title: "30-Second Script",
+          value: pack.shortFormScript,
+          icon: <Video size={18} />,
+          cta: "Copy Video Script",
+          doneLabel: "Script copied",
+          channels: ["YouTube Shorts", "IG/TikTok"]
+        },
+        {
+          title: "Short-Form Caption",
+          value: pack.shortFormCaption,
+          icon: <Captions size={18} />,
+          cta: "Copy Caption",
+          doneLabel: "Caption copied",
+          channels: ["YouTube Shorts", "IG/TikTok"]
+        }
+      ]
     },
     {
-      title: "X Teaser",
-      value: pack.xTeaser,
-      icon: <Sparkles size={18} />,
-      cta: "Copy X Teaser",
-      doneLabel: "Teaser copied"
+      title: "Audio",
+      eyebrow: "Voice note or podcast-style read",
+      cards: [
+        {
+          title: "30-Second Audio Read",
+          value: pack.audioRead,
+          icon: <Mic size={18} />,
+          cta: "Save Audio Read",
+          doneLabel: "Audio read saved",
+          channels: ["Audio"]
+        }
+      ]
     },
     {
-      title: "Discord/SMS Blurb",
-      value: pack.discordSms,
-      icon: <Inbox size={18} />,
-      cta: "Queue Blurb",
-      doneLabel: "Blurb queued"
-    },
-    {
-      title: "Responsible Play Note",
-      value: pack.responsiblePlayNote,
-      icon: <ShieldCheck size={18} />,
-      cta: "Attach Note",
-      doneLabel: "Note attached"
-    },
-    {
-      title: "Suggested Send Time",
-      value: pack.suggestedSendTime,
-      icon: <Clock size={18} />,
-      cta: "Use Send Time",
-      doneLabel: "Send time selected"
-    },
-    {
-      title: "Audience Segment",
-      value: pack.audienceSegment,
-      icon: <Users size={18} />,
-      cta: "Apply Segment",
-      doneLabel: "Segment applied"
-    },
-    {
-      title: "Business Goal",
-      value: pack.businessGoal,
-      icon: <Target size={18} />,
-      cta: "Track Goal",
-      doneLabel: "Goal tracked"
+      title: "Ops",
+      eyebrow: "Guardrails, timing, segment, and goal",
+      cards: [
+        {
+          title: "Responsible Play Note",
+          value: pack.responsiblePlayNote,
+          icon: <ShieldCheck size={18} />,
+          cta: "Attach Note",
+          doneLabel: "Note attached",
+          channels: []
+        },
+        {
+          title: "Suggested Send Time",
+          value: pack.suggestedSendTime,
+          icon: <Clock size={18} />,
+          cta: "Use Send Time",
+          doneLabel: "Send time selected",
+          channels: []
+        },
+        {
+          title: "Audience Segment",
+          value: pack.audienceSegment,
+          icon: <Users size={18} />,
+          cta: "Apply Segment",
+          doneLabel: "Segment applied",
+          channels: []
+        },
+        {
+          title: "Business Goal",
+          value: pack.businessGoal,
+          icon: <Target size={18} />,
+          cta: "Track Goal",
+          doneLabel: "Goal tracked",
+          channels: []
+        }
+      ]
     }
   ];
+  const visibleSections = sections
+    .map((section) => ({
+      ...section,
+      cards:
+        activeChannel === "All"
+          ? section.cards
+          : section.cards.filter((card) => card.channels.includes(activeChannel))
+    }))
+    .filter((section) => section.cards.length > 0);
+  const visibleAssetCount = visibleSections.reduce((total, section) => total + section.cards.length, 0);
 
   return (
     <div className="space-y-4">
@@ -476,32 +656,111 @@ function GrowthPackTab({ play }: { play: StructuredPlay | null }) {
         subtitle="Turn one structured play into a full creator growth package."
         chip="Package once, distribute everywhere"
       />
-      <DoorDashAnalogyCard />
       <GrowthSourceCard play={displayPlay} publishable={publishable} />
+      <ChannelMixRow
+        activeChannel={activeChannel}
+        visibleAssetCount={visibleAssetCount}
+        onChange={setActiveChannel}
+      />
+      <DoorDashAnalogyCard />
       {!publishable ? (
         <HeldDraftWarning>
           Draft held. Growth Studio will not generate subscriber-ready delivery until required
           details are added.
         </HeldDraftWarning>
       ) : null}
-      <div className="grid gap-3">
-        {cards.map((card) => (
-          <GrowthCard
-            key={card.title}
-            {...card}
-            actioned={completedActions.includes(`${displayPlay.id}:${card.title}`)}
-            disabled={!publishable}
-            lowQuality={!publishable}
-            onAction={() => {
-              const actionId = `${displayPlay.id}:${card.title}`;
-              setCompletedActions((current) =>
-                current.includes(actionId) ? current : [...current, actionId]
-              );
-            }}
-          />
-        ))}
-      </div>
+      {visibleSections.map((section) => (
+        <GrowthSection key={section.title} title={section.title} eyebrow={section.eyebrow}>
+          {section.cards.map((card) => (
+            <GrowthCard
+              key={card.title}
+              {...card}
+              actioned={completedActions.includes(`${displayPlay.id}:${card.title}`)}
+              disabled={!publishable}
+              lowQuality={!publishable}
+              onAction={() => {
+                const actionId = `${displayPlay.id}:${card.title}`;
+                setCompletedActions((current) =>
+                  current.includes(actionId) ? current : [...current, actionId]
+                );
+              }}
+            />
+          ))}
+        </GrowthSection>
+      ))}
     </div>
+  );
+}
+
+function ChannelMixRow({
+  activeChannel,
+  visibleAssetCount,
+  onChange
+}: {
+  activeChannel: GrowthChannel;
+  visibleAssetCount: number;
+  onChange: (channel: GrowthChannel) => void;
+}) {
+  return (
+    <section className="rounded-2xl border border-dub-border bg-dub-card p-4">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-dub-muted">
+          Channel Mix
+        </p>
+        <p className="shrink-0 text-[11px] font-black text-dub-green">
+          {visibleAssetCount} {visibleAssetCount === 1 ? "asset" : "assets"}
+        </p>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {growthChannels.map((channel) => {
+          const isActive = activeChannel === channel;
+
+          return (
+            <button
+            key={channel}
+              type="button"
+              onClick={() => onChange(channel)}
+              className={`rounded-full border px-3 py-1.5 text-[11px] font-black transition ${
+                isActive
+                  ? "border-dub-green bg-dub-green text-black shadow-glow"
+                  : "border-white/10 bg-black/25 text-white hover:border-dub-green/40"
+              }`}
+          >
+            {channel}
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-3 text-xs font-bold text-dub-muted">
+        {activeChannel === "All"
+          ? `Showing all ${visibleAssetCount} growth assets.`
+          : `Showing ${visibleAssetCount} ${
+              visibleAssetCount === 1 ? "asset" : "assets"
+            } for ${activeChannel}.`}
+      </p>
+    </section>
+  );
+}
+
+function GrowthSection({
+  title,
+  eyebrow,
+  children
+}: {
+  title: string;
+  eyebrow: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="space-y-3">
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-dub-green">
+          {eyebrow}
+        </p>
+        <h2 className="mt-1 text-xl font-black tracking-tight text-white">{title}</h2>
+      </div>
+      <div className="grid gap-3">{children}</div>
+    </section>
   );
 }
 
@@ -649,24 +908,28 @@ function TrustInboxTab({
           {`Latest draft held: ${heldDraft.pick} needs unit size, price, opponent, reasoning, and playable-to number before subscribers see it.`}
         </HeldDraftWarning>
       ) : null}
-      <section className="rounded-2xl border border-white/10 bg-dub-card p-4">
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-dub-muted">
-          Subscriber view
-        </p>
-        <p className="mt-2 text-[15px] font-semibold leading-relaxed text-white/82">
-          Fans do not see the messy input. They get a clear capper, pick, unit size, playable-to
-          number, and responsible-play reminder.
-        </p>
-      </section>
+      <TrustActionGuide />
 
+      <section className="flex items-end justify-between gap-3">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-dub-green">
+            Subscriber-ready
+          </p>
+          <h2 className="mt-1 text-xl font-black text-white">Available Plays</h2>
+        </div>
+        <span className="rounded-full border border-white/10 bg-dub-card px-3 py-1.5 text-xs font-black text-dub-muted">
+          {inboxPlays.length} cards
+        </span>
+      </section>
       <div className="grid gap-3">
-        {inboxPlays.map((inboxPlay) => {
+        {inboxPlays.map((inboxPlay, index) => {
           const isTailed = tailedPlays.some((item) => item.id === inboxPlay.id);
 
           return (
             <InboxCard
               key={inboxPlay.id}
               play={inboxPlay}
+              sourceLabel={index === 0 ? "Generated from Studio" : "Capper update"}
               isTailed={isTailed}
               confirmed={confirmationId === inboxPlay.id}
               onTail={() => onTail(inboxPlay)}
@@ -711,13 +974,41 @@ function TrustInboxTab({
   );
 }
 
+function TrustActionGuide() {
+  const steps = ["Review card", "Confirm line", "Tail Pick"];
+
+  return (
+    <section className="rounded-2xl border border-dub-green/25 bg-dub-green/10 p-4">
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-dub-green">
+        Fan action flow
+      </p>
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        {steps.map((step, index) => (
+          <div key={step} className="rounded-xl border border-white/10 bg-black/25 p-3 text-center">
+            <p className="mx-auto grid h-7 w-7 place-items-center rounded-full bg-dub-green text-xs font-black text-black">
+              {index + 1}
+            </p>
+            <p className="mt-2 text-[11px] font-black leading-tight text-white">{step}</p>
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 text-sm font-semibold leading-relaxed text-white/78">
+        Fans only see structured, publishable plays. Held drafts stay internal until the capper adds
+        the missing details.
+      </p>
+    </section>
+  );
+}
+
 function InboxCard({
   play,
+  sourceLabel,
   isTailed,
   confirmed,
   onTail
 }: {
   play: InboxPlay;
+  sourceLabel: string;
   isTailed: boolean;
   confirmed: boolean;
   onTail: () => void;
@@ -726,32 +1017,43 @@ function InboxCard({
 
   return (
     <article className="rounded-2xl border border-dub-border bg-dub-card p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 gap-3">
-          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-dub-green text-xl font-black text-black">
-            {play.capper.slice(0, 1)}
-          </div>
-          <div className="min-w-0">
-            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-dub-green">
-              From {play.capper}
-            </p>
-            <h3 className="mt-1 text-xl font-black leading-tight text-white">{play.pick}</h3>
-          </div>
+      <div className="flex items-center justify-between gap-3">
+        <span className="rounded-full border border-dub-green/25 bg-dub-green/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-dub-green">
+          {sourceLabel}
+        </span>
+        <StatusPill status={play.status} compact />
+      </div>
+
+      <div className="mt-4 flex min-w-0 items-center gap-3">
+        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-dub-green text-xl font-black text-black">
+          {play.capper.slice(0, 1)}
         </div>
-        <div className="shrink-0">
-          <StatusPill status={play.status} compact />
+        <div className="min-w-0">
+          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-dub-muted">
+            Capper
+          </p>
+          <p className="mt-1 truncate text-lg font-black leading-none text-white">{play.capper}</p>
         </div>
       </div>
 
+      <h3 className="mt-4 text-[24px] font-black leading-tight tracking-tight text-white">
+        {play.pick}
+      </h3>
+
       <div className="mt-4 grid grid-cols-2 gap-3">
-        <Field label="Unit" value={play.unit} warn={play.unit === "Missing"} />
+        <Field label="Unit Size" value={play.unit} warn={play.unit === "Missing"} />
         <Field label="Playable To" value={play.playableTo} warn={play.playableTo === "Missing"} />
       </div>
 
-      <p className="mt-4 rounded-xl bg-black/25 p-3 text-sm font-semibold leading-relaxed text-white/82">
-        {play.note}
+      <div className="mt-4 rounded-xl border border-white/8 bg-black/25 p-3">
+        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-dub-muted">
+          Capper note
+        </p>
+        <p className="mt-2 text-sm font-semibold leading-relaxed text-white/82">{play.note}</p>
+      </div>
+      <p className="mt-3 rounded-xl border border-white/8 bg-black/20 px-3 py-2 text-xs font-black text-dub-muted">
+        Confirm your line. Bet responsibly.
       </p>
-      <p className="mt-3 text-xs font-bold text-dub-muted">Confirm your line. Bet responsibly.</p>
 
       <button
         type="button"
@@ -780,12 +1082,20 @@ function InboxCard({
 
 function InsightsTab({ play }: { play: StructuredPlay | null }) {
   const heldDraft = play && !isPublishablePlay(play);
-  const metrics = [
-    ["Push Open Rate", "32%"],
+  const channelMetrics = [
+    { label: "Push Open Rate", value: "32%", progress: 32 },
+    { label: "X Teaser CTR", value: "11%", progress: 24 },
+    { label: "Discord/SMS Replies", value: "4", progress: 36 },
+    { label: "Short-Form Views", value: "1.8k", progress: 72 },
+    { label: "Video Saves", value: "14", progress: 58 },
+    { label: "Audio Completion", value: "46%", progress: 46 }
+  ];
+
+  const summaryMetrics = [
     ["Tails", "18"],
     ["Saves", "6"],
-    ["Subscriber Replies", "4"],
-    ["Best Channel", "Push"]
+    ["Replies", "4"],
+    ["Best Lever", "Short-form"]
   ];
 
   return (
@@ -802,39 +1112,57 @@ function InsightsTab({ play }: { play: StructuredPlay | null }) {
       ) : null}
 
       <section className="grid grid-cols-2 gap-3">
-        {metrics.map(([label, value]) => (
+        {summaryMetrics.map(([label, value]) => (
           <div key={label} className="rounded-2xl border border-dub-border bg-dub-card p-4">
             <p className="text-[12px] font-black uppercase tracking-[0.14em] text-dub-muted">
               {label}
             </p>
-            <p className="mt-2 text-2xl font-black text-white">{value}</p>
+            <p className="mt-2 text-[24px] font-black leading-none text-white">{value}</p>
           </div>
         ))}
+      </section>
+
+      <section className="rounded-2xl border border-dub-border bg-dub-card p-4">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-dub-muted">
+              Channel Performance
+            </p>
+            <h2 className="mt-1 text-xl font-black text-white">Growth mix</h2>
+          </div>
+          <BarChart3 className="text-dub-green" size={22} />
+        </div>
+        <div className="grid gap-3">
+          {channelMetrics.map((metric) => (
+            <ChannelMetricCard key={metric.label} {...metric} />
+          ))}
+        </div>
       </section>
 
       <section className="rounded-2xl border border-dub-green/30 bg-dub-green/10 p-4">
         <div className="mb-2 flex items-center gap-2 text-dub-green">
           <Sparkles size={18} />
-          <p className="text-xs font-black uppercase tracking-[0.2em]">AI Insight</p>
+          <p className="text-xs font-black uppercase tracking-[0.2em]">Recommendation</p>
         </div>
         <p className="text-[15px] font-semibold leading-relaxed text-white">
-          Posts with a playable-to number and unit size are easier for subscribers to act on. Keep
-          using structured play cards for line-sensitive props.
+          Use push for urgency, short-form video for discovery, and audio notes for trust.
         </p>
       </section>
 
       <section className="rounded-2xl border border-dub-border bg-dub-card p-4">
         <p className="text-xs font-black uppercase tracking-[0.18em] text-dub-muted">Next Action</p>
-        <p className="mt-2 text-lg font-black text-white">Send post-game recap after result.</p>
+        <p className="mt-2 text-lg font-black leading-tight text-white">
+          Record a 30-second recap after result and clip it for Reels, TikTok, and Shorts.
+        </p>
       </section>
 
       <section className="rounded-2xl border border-dub-border bg-dub-card p-4">
         <h3 className="text-lg font-black text-white">Why this matters</h3>
-        <div className="mt-4 space-y-3">
+        <div className="mt-4 grid gap-3">
           {[
-            "Clearer posts help subscribers act faster.",
-            "Structured plays make tailing, recaps, and analytics cleaner.",
-            "Cappers get a lightweight growth operator without DubClub becoming an odds engine."
+            "Structured plays make every channel easier to package.",
+            "Short-form drives discovery while DubClub keeps the paid card trusted.",
+            "Audio and recap assets help cappers build voice without becoming an odds engine."
           ].map((item) => (
             <div key={item} className="flex gap-3">
               <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-dub-green" />
@@ -874,6 +1202,33 @@ function InsightsTab({ play }: { play: StructuredPlay | null }) {
         Tail Pick &rarr; Performance Insight.
       </section>
     </div>
+  );
+}
+
+function ChannelMetricCard({
+  label,
+  value,
+  progress
+}: {
+  label: string;
+  value: string;
+  progress: number;
+}) {
+  return (
+    <article className="rounded-xl border border-white/8 bg-black/25 p-3">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[11px] font-black uppercase tracking-[0.12em] text-dub-muted">
+          {label}
+        </p>
+        <p className="shrink-0 text-lg font-black leading-none text-white">{value}</p>
+      </div>
+      <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/8">
+        <div
+          className="h-full rounded-full bg-dub-green shadow-glow"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+    </article>
   );
 }
 

@@ -58,6 +58,14 @@ export function generateGrowthPack(play: StructuredPlay): GrowthPack {
         "Leaning Lakers ML, but holding until the final number and official staking note are ready.",
       discordSms:
         "Lakers ML is only a lean right now. Waiting on price, opponent context, and unit size before making it official.",
+      shortFormHook:
+        "Held draft: do not record as an official play until the number, opponent, unit size, and reasoning are complete.",
+      shortFormScript:
+        'Internal creator note only: "I lean Lakers ML tonight, but I am waiting for the final number before making this official."',
+      shortFormCaption:
+        "Lean only, not an official play. Waiting for final price, staking, and reasoning before posting to subscribers.",
+      audioRead:
+        "Hold this as a lean. Do not send a voice note until the play has unit size, price, opponent context, and a playable-to number.",
       responsiblePlayNote:
         "Avoid lock language. Confirm your own number and only play within your unit plan.",
       suggestedSendTime:
@@ -78,6 +86,14 @@ export function generateGrowthPack(play: StructuredPlay): GrowthPack {
       "NBA prop added for subscribers: Brunson PRA angle with a playable-to number and injury-status note. Full card is live inside DubClub.",
     discordSms:
       "Added: Brunson Over 24.5 PRA, 1u. Playable to 26.5. Usage angle improves if Hart sits. Confirm your line before placing.",
+    shortFormHook:
+      "Brunson PRA prop is live: playable-to number matters, and Hart injury news is the swing factor.",
+    shortFormScript:
+      "Quick NBA prop for subscribers: Jalen Brunson Over 24.5 PRA for 1u, playable to 26.5. I like the Knicks pace setup and Brunson's usage profile. If Josh Hart sits, that usage angle gets even cleaner. Confirm the injury report and your own line before tailing.",
+    shortFormCaption:
+      "Brunson PRA angle is live for subscribers. 1u, playable to 26.5. Check Hart status and confirm your number before tailing.",
+    audioRead:
+      "I added Jalen Brunson Over 24.5 PRA for 1u, playable to 26.5. The setup is pace plus usage, with extra upside if Hart sits. Confirm the final injury report and make sure your number is still in range.",
     responsiblePlayNote:
       "Bet responsibly. Confirm your own line and only play within your unit plan.",
     suggestedSendTime:
