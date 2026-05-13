@@ -20,10 +20,10 @@ The bet is not that AI helps cappers make better picks. The bet is that structur
    Choose one of four read-only event-backed sample signals, generate a structured play review, then approve publishable reviews into Growth Pack.
 
 2. **Growth Pack**  
-   Convert one approved play into channel-ready assets for DubClub, push, X, Discord/SMS, YouTube Shorts, IG/TikTok, and audio.
+   Convert one approved play into channel-ready assets for DubClub, push, X, Discord/SMS, YouTube Shorts, IG/TikTok, and audio. A mocked AI Agent Layer can package the play into static creative concepts using capper voice, template style, and mirror-account controls.
 
 3. **Trust Inbox**  
-   Show how subscribers receive structured plays, confirm the line, and tail only publishable picks.
+   Show how subscribers receive structured plays, confirm the line, view DubClub-style capper cards, open capper detail pages, and tail only publishable picks.
 
 4. **Insights**  
    Close the loop with mock creator performance metrics, channel performance, and next-action coaching.
@@ -58,7 +58,22 @@ The MLB Dodgers hype draft is intentionally held because it lacks unit size, pri
 - A clear path from review approval into multi-channel growth assets.
 - Fan-facing trust cards that only expose publishable plays.
 - Channel-level growth thinking across text, audio, and short-form video.
+- Mocked AI Agent creative packaging for YouTube Shorts, IG/TikTok, and audio reads.
+- DubClub-inspired capper profile cards and detail pages using branded profile patterns.
 - Strategic restraint: no backend, no auth, no sportsbook integrations, and no live odds infrastructure.
+
+## AI Agent Layer
+
+Growth Pack includes a local, deterministic AI Agent Layer that demonstrates how DubClub could help cappers become stronger creator-operators.
+
+The agent can:
+
+- Generate static creative concepts for YouTube Shorts, IG/TikTok, and audio reads.
+- Use template styles such as `Proof-first`, `Sharp breakdown`, `High-energy`, and `Premium minimal`.
+- Mirror mocked capper voice patterns from GreekLocks, PropGeekZeke, TheParlayPlug, and SKOHTY.
+- Keep the capper approval step intact before any creative is queued.
+
+These are thumbnail-style planning assets only. The prototype does not generate real media, call AI APIs, upload files, or publish externally.
 
 ## Tech Stack
 
@@ -100,9 +115,10 @@ npm run build
 3. Review the quality score, event details, missing details, and risk flag.
 4. Click `Approve & Build Growth Pack`.
 5. Filter Growth Pack by short-form or audio to show multi-channel actionability.
-6. Open Trust Inbox and tail a publishable play.
-7. Open Insights and show the creator performance loop.
-8. Return to Studio, generate the Held MLB Hype Draft, and show that Growth Studio blocks incomplete/hype-heavy content before fan delivery.
+6. In the AI Agent Layer, switch template style and mirror account to show capper-branded creative packaging.
+7. Open Trust Inbox, tap a capper profile, return, and tail a publishable play.
+8. Open Insights and show the creator performance loop.
+9. Return to Studio, generate the Held MLB Hype Draft, and show that Growth Studio blocks incomplete/hype-heavy content before fan delivery.
 
 ## Full Overview
 

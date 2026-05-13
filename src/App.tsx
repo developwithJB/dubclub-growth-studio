@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import {
   AlertTriangle,
@@ -10,13 +10,17 @@ import {
   Clapperboard,
   Clock,
   ClipboardCheck,
+  CreditCard,
   Inbox,
   Lightbulb,
   Mic,
   Package,
+  Play,
   Plus,
+  Radio,
   Send,
   ShieldCheck,
+  SlidersHorizontal,
   Sparkles,
   Target,
   Users,
@@ -25,14 +29,24 @@ import {
   Zap
 } from "lucide-react";
 import {
+  capperProfiles,
   examples,
   fallbackInboxPlay,
+  generateAgentCreativeOptions,
   generateGrowthPack,
   generateStructuredPlay,
+  getCapperProfileForPlay,
   mockInboxPlays,
   playToInboxCard
 } from "./lib/generate";
-import type { InboxPlay, StructuredPlay } from "./types";
+import type {
+  AgentCreativeOption,
+  AgentStyle,
+  CapperProfile,
+  InboxPlay,
+  MirrorVoice,
+  StructuredPlay
+} from "./types";
 
 type Tab = "studio" | "growth" | "trust" | "insights";
 type GrowthChannel =
@@ -63,6 +77,21 @@ const growthChannels: GrowthChannel[] = [
   "Audio"
 ];
 
+const agentStyles: Array<{ id: AgentStyle; label: string }> = [
+  { id: "proof-first", label: "Proof-first" },
+  { id: "sharp-breakdown", label: "Sharp breakdown" },
+  { id: "high-energy", label: "High-energy" },
+  { id: "premium-minimal", label: "Premium minimal" }
+];
+
+const mirrorVoices: Array<{ id: MirrorVoice; label: string }> = [
+  { id: "original", label: "Original voice" },
+  { id: "greeklocks", label: "GreekLocks" },
+  { id: "propgeekzeke", label: "PropGeekZeke" },
+  { id: "theparlayplug", label: "TheParlayPlug" },
+  { id: "skohty", label: "SKOHTY" }
+];
+
 const defaultDemoPlay = generateStructuredPlay(examples.nbaPlayoff);
 const PUBLISHABLE_SCORE = 70;
 
@@ -82,6 +111,11 @@ function App() {
   const [play, setPlay] = useState<StructuredPlay | null>(null);
   const [tailedPlays, setTailedPlays] = useState<InboxPlay[]>([]);
   const [confirmationId, setConfirmationId] = useState<string | null>(null);
+  const mainRef = useRef<HTMLElement | null>(null);
+
+  useLayoutEffect(() => {
+    mainRef.current?.scrollTo({ top: 0, left: 0, behavior: "instant" });
+  }, [activeTab]);
 
   const activeView = useMemo(() => {
     if (activeTab === "growth") {
@@ -126,7 +160,10 @@ function App() {
     <div className="h-dvh overflow-hidden bg-[#050506] text-white sm:flex sm:items-center sm:justify-center sm:p-5">
       <section className="relative mx-auto flex h-full min-h-0 w-full max-w-[430px] flex-col overflow-hidden bg-dub-ink sm:max-h-[900px] sm:rounded-[38px] sm:border sm:border-white/10 sm:shadow-2xl">
         <AppHeader />
-        <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-6 pt-5">
+        <main
+          ref={mainRef}
+          className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-6 pt-5"
+        >
           {activeView}
         </main>
         <BottomTabs activeTab={activeTab} onChange={setActiveTab} />
@@ -602,6 +639,13 @@ function GrowthPackTab({ play }: { play: StructuredPlay | null }) {
   const pack = generateGrowthPack(displayPlay);
   const [completedActions, setCompletedActions] = useState<string[]>([]);
   const [activeChannel, setActiveChannel] = useState<GrowthChannel>("All");
+  const [agentStyle, setAgentStyle] = useState<AgentStyle>("proof-first");
+  const [mirrorVoice, setMirrorVoice] = useState<MirrorVoice>("original");
+  const creativeOptions = generateAgentCreativeOptions(displayPlay, agentStyle, mirrorVoice);
+  const visibleCreativeOptions =
+    activeChannel === "All"
+      ? creativeOptions
+      : creativeOptions.filter((option) => option.channel === activeChannel);
 
   const sections: Array<{
     title: string;
@@ -745,7 +789,9 @@ function GrowthPackTab({ play }: { play: StructuredPlay | null }) {
           : section.cards.filter((card) => card.channels.includes(activeChannel))
     }))
     .filter((section) => section.cards.length > 0);
-  const visibleAssetCount = visibleSections.reduce((total, section) => total + section.cards.length, 0);
+  const visibleAssetCount =
+    visibleCreativeOptions.length +
+    visibleSections.reduce((total, section) => total + section.cards.length, 0);
 
   return (
     <div className="space-y-4">
@@ -760,6 +806,25 @@ function GrowthPackTab({ play }: { play: StructuredPlay | null }) {
         visibleAssetCount={visibleAssetCount}
         onChange={setActiveChannel}
       />
+      {(activeChannel === "All" || visibleCreativeOptions.length > 0) ? (
+        <AIAgentLayer
+          play={displayPlay}
+          publishable={publishable}
+          activeChannel={activeChannel}
+          options={visibleCreativeOptions}
+          agentStyle={agentStyle}
+          mirrorVoice={mirrorVoice}
+          completedActions={completedActions}
+          onStyleChange={setAgentStyle}
+          onMirrorVoiceChange={setMirrorVoice}
+          onAction={(optionId) => {
+            const actionId = `${displayPlay.id}:agent:${optionId}`;
+            setCompletedActions((current) =>
+              current.includes(actionId) ? current : [...current, actionId]
+            );
+          }}
+        />
+      ) : null}
       <DoorDashAnalogyCard />
       {!publishable ? (
         <HeldDraftWarning>
@@ -786,6 +851,361 @@ function GrowthPackTab({ play }: { play: StructuredPlay | null }) {
           ))}
         </GrowthSection>
       ))}
+    </div>
+  );
+}
+
+function AIAgentLayer({
+  play,
+  publishable,
+  activeChannel,
+  options,
+  agentStyle,
+  mirrorVoice,
+  completedActions,
+  onStyleChange,
+  onMirrorVoiceChange,
+  onAction
+}: {
+  play: StructuredPlay;
+  publishable: boolean;
+  activeChannel: GrowthChannel;
+  options: AgentCreativeOption[];
+  agentStyle: AgentStyle;
+  mirrorVoice: MirrorVoice;
+  completedActions: string[];
+  onStyleChange: (style: AgentStyle) => void;
+  onMirrorVoiceChange: (voice: MirrorVoice) => void;
+  onAction: (optionId: string) => void;
+}) {
+  const sourceProfile = getCapperProfileForPlay(play);
+  const mirroredProfile =
+    mirrorVoice === "original" ? sourceProfile : capperProfiles[mirrorVoice];
+  const queueActionId = `${play.id}:agent:queue-creative`;
+  const queueActioned = completedActions.includes(queueActionId);
+  const visibleLabel =
+    activeChannel === "All"
+      ? `${options.length} creative options`
+      : `${options.length} ${activeChannel} ${options.length === 1 ? "option" : "options"}`;
+
+  return (
+    <section
+      className={`rounded-[28px] border p-4 ${
+        publishable
+          ? "border-dub-green/35 bg-[radial-gradient(circle_at_top_left,rgba(44,255,31,0.18),rgba(18,18,21,0.98)_42%)]"
+          : "border-dub-amber/35 bg-[#1c1710]"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2 text-dub-green">
+            <Sparkles size={18} />
+            <p className="text-xs font-black uppercase tracking-[0.18em]">
+              AI Agent Layer
+            </p>
+          </div>
+          <h2 className="mt-2 text-2xl font-black tracking-tight text-white">
+            Turn the play into creator media
+          </h2>
+          <p className="mt-2 text-sm font-semibold leading-relaxed text-white/75">
+            Uses past capper content patterns to draft channel-native creative. The capper approves
+            before anything ships.
+          </p>
+        </div>
+        <span className="shrink-0 rounded-full border border-white/10 bg-black/35 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-white">
+          {visibleLabel}
+        </span>
+      </div>
+
+      <div className="mt-4 rounded-2xl border border-white/10 bg-black/28 p-3">
+        <div className="flex items-center gap-3">
+          <CapperAvatar profile={mirroredProfile} size="sm" />
+          <div className="min-w-0">
+            <p className="truncate text-sm font-black text-white">
+              {mirrorVoice === "original" ? "Original capper voice" : mirroredProfile.name}
+            </p>
+            <p className="truncate text-xs font-bold text-dub-muted">
+              Training signal: past posts, captions, voice notes, and subscriber replies
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <AgentPicker
+        label="Template style"
+        icon={<SlidersHorizontal size={15} />}
+        options={agentStyles}
+        selected={agentStyle}
+        onSelect={onStyleChange}
+      />
+      <AgentPicker
+        label="Mirror account"
+        icon={<Users size={15} />}
+        options={mirrorVoices}
+        selected={mirrorVoice}
+        onSelect={onMirrorVoiceChange}
+      />
+
+      {!publishable ? (
+        <div className="mt-4 flex gap-3 rounded-2xl border border-dub-amber/35 bg-dub-amber/10 p-3">
+          <AlertTriangle className="mt-0.5 shrink-0 text-dub-amber" size={19} />
+          <div>
+            <p className="text-sm font-black text-dub-amber">
+              Creative generation held until the play has enough detail.
+            </p>
+            <p className="mt-1 text-xs font-bold leading-relaxed text-white/75">
+              The agent can draft directions, but distribution remains blocked until the capper
+              adds unit size, price, reasoning, and playable-to context.
+            </p>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="mt-4 grid gap-3">
+        {options.map((option) => {
+          const actionId = `${play.id}:agent:${option.id}`;
+
+          return (
+            <AgentCreativeCard
+              key={option.id}
+              option={option}
+              profile={mirroredProfile}
+              play={play}
+              disabled={!publishable}
+              actioned={completedActions.includes(actionId)}
+              onAction={() => onAction(option.id)}
+            />
+          );
+        })}
+      </div>
+
+      <button
+        type="button"
+        disabled={!publishable || queueActioned}
+        onClick={() => onAction("queue-creative")}
+        className={`mt-4 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-black transition ${
+          queueActioned
+            ? "bg-dub-green text-black"
+            : !publishable
+              ? "cursor-not-allowed border border-dub-amber/25 bg-dub-amber/10 text-dub-amber"
+              : "bg-white text-black hover:bg-dub-green"
+        }`}
+      >
+        {queueActioned ? <Check size={17} /> : <Sparkles size={17} />}
+        {queueActioned ? "Creative queued" : !publishable ? "Held for details" : "Queue Creative"}
+      </button>
+    </section>
+  );
+}
+
+function AgentPicker<T extends AgentStyle | MirrorVoice>({
+  label,
+  icon,
+  options,
+  selected,
+  onSelect
+}: {
+  label: string;
+  icon: JSX.Element;
+  options: Array<{ id: T; label: string }>;
+  selected: T;
+  onSelect: (value: T) => void;
+}) {
+  return (
+    <div className="mt-4">
+      <div className="mb-2 flex items-center gap-2 text-dub-muted">
+        {icon}
+        <p className="text-[10px] font-black uppercase tracking-[0.18em]">{label}</p>
+      </div>
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {options.map((option) => {
+          const isSelected = selected === option.id;
+
+          return (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => onSelect(option.id)}
+              className={`shrink-0 rounded-full border px-3 py-2 text-[11px] font-black transition ${
+                isSelected
+                  ? "border-dub-green bg-dub-green text-black shadow-glow"
+                  : "border-white/10 bg-black/30 text-white hover:border-dub-green/40"
+              }`}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function AgentCreativeCard({
+  option,
+  profile,
+  play,
+  disabled,
+  actioned,
+  onAction
+}: {
+  option: AgentCreativeOption;
+  profile: CapperProfile;
+  play: StructuredPlay;
+  disabled: boolean;
+  actioned: boolean;
+  onAction: () => void;
+}) {
+  return (
+    <article
+      className={`overflow-hidden rounded-2xl border ${
+        disabled ? "border-dub-amber/25 bg-black/30" : "border-white/10 bg-[#141416]"
+      }`}
+    >
+      <AgentCreativeThumbnail option={option} profile={profile} play={play} disabled={disabled} />
+      <div className="p-4">
+        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-dub-green">
+          {option.eyebrow}
+        </p>
+        <h3 className="mt-1 text-lg font-black text-white">{option.title}</h3>
+        <p className="mt-2 text-sm font-black leading-relaxed text-white">{option.hook}</p>
+        <p className="mt-2 text-xs font-semibold leading-relaxed text-white/70">{option.body}</p>
+        <p className="mt-3 rounded-xl border border-white/10 bg-black/35 p-3 text-xs font-bold leading-relaxed text-white/80">
+          {option.caption}
+        </p>
+        <button
+          type="button"
+          onClick={onAction}
+          disabled={disabled || actioned}
+          className={`mt-4 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-black transition ${
+            actioned
+              ? "bg-dub-green text-black"
+              : disabled
+                ? "cursor-not-allowed border border-dub-amber/25 bg-dub-amber/10 text-dub-amber"
+                : "bg-dub-green text-black shadow-glow hover:bg-white"
+          }`}
+        >
+          {actioned ? <Check size={17} /> : null}
+          {actioned ? option.doneLabel : disabled ? "Held for details" : option.cta}
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function AgentCreativeThumbnail({
+  option,
+  profile,
+  play,
+  disabled
+}: {
+  option: AgentCreativeOption;
+  profile: CapperProfile;
+  play: StructuredPlay;
+  disabled: boolean;
+}) {
+  const title = playTitle(play);
+
+  if (option.channel === "Audio") {
+    return (
+      <div className={`p-4 ${disabled ? "opacity-60" : ""}`}>
+        <div className="rounded-[22px] border border-white/10 bg-[linear-gradient(135deg,#050806,#142014)] p-4">
+          <div className="flex items-center gap-3">
+            <CapperAvatar profile={profile} size="sm" />
+            <div>
+              <p className="text-sm font-black text-white">{profile.name} Voice Read</p>
+              <p className="text-xs font-bold text-dub-muted">30-second trust note</p>
+            </div>
+          </div>
+          <div className="mt-5 flex h-14 items-end gap-1.5">
+            {Array.from({ length: 24 }).map((_, index) => (
+              <span
+                key={index}
+                className="w-full rounded-full bg-dub-green"
+                style={{ height: `${22 + ((index * 17) % 34)}px`, opacity: 0.45 + (index % 4) * 0.12 }}
+              />
+            ))}
+          </div>
+          <div className="mt-4 flex items-center justify-between rounded-full bg-black/45 px-4 py-3">
+            <div className="flex items-center gap-2 text-white">
+              <Radio size={18} />
+              <span className="text-xs font-black">Capper-approved read</span>
+            </div>
+            <span className="text-xs font-black text-dub-green">0:30</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (option.channel === "IG/TikTok") {
+    return (
+      <div className={`flex justify-center p-4 ${disabled ? "opacity-60" : ""}`}>
+        <div className="relative aspect-[9/16] w-[58%] min-w-[170px] overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top,#2cff1f_0%,#0a130b_38%,#050505_100%)] p-4 shadow-2xl">
+          <div className="absolute inset-x-4 top-4 flex items-center justify-between">
+            <CapperAvatar profile={profile} size="sm" />
+            <span className="rounded-full bg-black/60 px-2 py-1 text-[9px] font-black text-white">
+              {play.sport}
+            </span>
+          </div>
+          <div className="absolute inset-x-4 bottom-16">
+            <p className="text-2xl font-black leading-tight text-white">{title}</p>
+            <p className="mt-2 text-xs font-black text-dub-green">
+              Playable to {play.playableTo}
+            </p>
+          </div>
+          <div className="absolute inset-x-4 bottom-4 rounded-2xl bg-black/70 p-3">
+            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-dub-muted">
+              Caption cue
+            </p>
+            <p className="mt-1 text-xs font-bold leading-snug text-white">
+              Confirm your number before tailing.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`p-4 ${disabled ? "opacity-60" : ""}`}>
+      <div className="relative overflow-hidden rounded-[24px] border border-white/10 bg-[linear-gradient(135deg,#030503,#071208_48%,#143316)] p-4 shadow-2xl">
+        <div className="flex items-center gap-3">
+          <CapperAvatar profile={profile} size="sm" />
+          <div>
+            <p className="text-lg font-black text-white">{profile.name} Product Short</p>
+            <p className="text-sm font-bold text-white/75">{profile.handle}</p>
+          </div>
+        </div>
+        <div className="mt-5 grid grid-cols-2 gap-2">
+          {["Unit", "Playable", "Risk", "DubClub"].map((label) => (
+            <div key={label} className="rounded-xl border border-white/10 bg-white/5 p-3">
+              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-dub-muted">
+                {label}
+              </p>
+              <p className="mt-1 truncate text-xs font-black text-white">
+                {label === "Unit"
+                  ? play.unitSize
+                  : label === "Playable"
+                    ? play.playableTo
+                    : label === "Risk"
+                      ? "Reviewed"
+                      : "Live"}
+              </p>
+            </div>
+          ))}
+        </div>
+        <div className="absolute inset-0 grid place-items-center">
+          <span className="grid h-16 w-20 place-items-center rounded-2xl bg-red-600 text-white shadow-2xl">
+            <Play size={34} fill="currentColor" />
+          </span>
+        </div>
+        <div className="mt-5 flex items-center justify-end">
+          <span className="rounded-full bg-black/70 px-4 py-2 text-sm font-black text-white">
+            Watch on YouTube
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -989,10 +1409,16 @@ function TrustInboxTab({
   confirmationId: string | null;
   onTail: (play: InboxPlay) => void;
 }) {
+  const [selectedCapperId, setSelectedCapperId] = useState<InboxPlay["capperId"] | null>(null);
   const currentPlayPublishable = isPublishablePlay(play);
   const heldDraft = play && !currentPlayPublishable ? play : null;
   const generatedInboxPlay = currentPlayPublishable && play ? playToInboxCard(play) : fallbackInboxPlay;
   const inboxPlays = [generatedInboxPlay, ...mockInboxPlays];
+  const selectedCapper = selectedCapperId ? capperProfiles[selectedCapperId] : null;
+
+  if (selectedCapper) {
+    return <CapperDetailPage profile={selectedCapper} onBack={() => setSelectedCapperId(null)} />;
+  }
 
   return (
     <div className="space-y-5">
@@ -1028,6 +1454,7 @@ function TrustInboxTab({
               key={inboxPlay.id}
               play={inboxPlay}
               sourceLabel={index === 0 ? "Generated from Studio" : "Capper update"}
+              onViewCapper={() => setSelectedCapperId(inboxPlay.capperId)}
               isTailed={isTailed}
               confirmed={confirmationId === inboxPlay.id}
               onTail={() => onTail(inboxPlay)}
@@ -1053,11 +1480,14 @@ function TrustInboxTab({
                 className="rounded-xl border border-dub-green/20 bg-dub-green/10 px-3 py-3"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <div>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <CapperAvatar profile={capperProfiles[item.capperId]} size="sm" />
+                    <div className="min-w-0">
                     <p className="text-[10px] font-black uppercase tracking-[0.16em] text-dub-green">
                       {item.capper}
                     </p>
-                    <p className="mt-1 text-sm font-black text-white">{item.pick}</p>
+                    <p className="mt-1 truncate text-sm font-black text-white">{item.pick}</p>
+                    </div>
                   </div>
                   <span className="shrink-0 rounded-full bg-dub-green px-2.5 py-1 text-xs font-black text-black">
                     {item.unit}
@@ -1101,17 +1531,20 @@ function TrustActionGuide() {
 function InboxCard({
   play,
   sourceLabel,
+  onViewCapper,
   isTailed,
   confirmed,
   onTail
 }: {
   play: InboxPlay;
   sourceLabel: string;
+  onViewCapper: () => void;
   isTailed: boolean;
   confirmed: boolean;
   onTail: () => void;
 }) {
   const disabled = play.status === "Needs More Detail" || play.unit === "Missing" || play.playableTo === "Missing";
+  const profile = capperProfiles[play.capperId];
 
   return (
     <article className="rounded-2xl border border-dub-border bg-dub-card p-4">
@@ -1122,17 +1555,21 @@ function InboxCard({
         <StatusPill status={play.status} compact />
       </div>
 
-      <div className="mt-4 flex min-w-0 items-center gap-3">
-        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-dub-green text-xl font-black text-black">
-          {play.capper.slice(0, 1)}
-        </div>
+      <button
+        type="button"
+        onClick={onViewCapper}
+        className="mt-4 flex w-full min-w-0 items-center gap-3 rounded-2xl border border-white/10 bg-black/20 p-3 text-left transition hover:border-dub-green/45 hover:bg-dub-green/5"
+      >
+        <CapperAvatar profile={profile} size="md" />
         <div className="min-w-0">
           <p className="text-[11px] font-black uppercase tracking-[0.18em] text-dub-muted">
-            Capper
+            Tap to view club
           </p>
-          <p className="mt-1 truncate text-lg font-black leading-none text-white">{play.capper}</p>
+          <p className="mt-1 truncate text-lg font-black leading-none text-white">{profile.name}</p>
+          <p className="mt-1 text-xs font-bold text-dub-muted">{profile.handle}</p>
         </div>
-      </div>
+        <span className="ml-auto shrink-0 text-lg font-black text-dub-green">&rarr;</span>
+      </button>
 
       <h3 className="mt-4 text-[24px] font-black leading-tight tracking-tight text-white">
         {play.pick}
@@ -1175,6 +1612,171 @@ function InboxCard({
         </p>
       ) : null}
     </article>
+  );
+}
+
+function CapperAvatar({
+  profile,
+  size = "md"
+}: {
+  profile: CapperProfile;
+  size?: "sm" | "md" | "lg";
+}) {
+  const sizeClass = {
+    sm: "h-9 w-9 rounded-xl text-[11px]",
+    md: "h-12 w-12 rounded-2xl text-sm",
+    lg: "h-20 w-20 rounded-3xl text-lg"
+  }[size];
+
+  return (
+    <div
+      className={`grid shrink-0 place-items-center overflow-hidden border-2 border-white bg-black font-black text-white shadow-lg ${sizeClass}`}
+      style={{ background: profile.avatarStyle }}
+    >
+      {profile.avatarUrl ? (
+        <img
+          src={profile.avatarUrl}
+          alt={profile.name}
+          className="h-full w-full object-cover"
+          loading="lazy"
+        />
+      ) : (
+        profile.avatarFallback
+      )}
+    </div>
+  );
+}
+
+function CapperDetailPage({
+  profile,
+  onBack
+}: {
+  profile: CapperProfile;
+  onBack: () => void;
+}) {
+  return (
+    <div className="space-y-4">
+      <button
+        type="button"
+        onClick={onBack}
+        className="rounded-full border border-white/10 bg-dub-card px-4 py-2 text-sm font-black text-white transition hover:border-dub-green/40"
+      >
+        &larr; Back to Trust Inbox
+      </button>
+
+      <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[#f7f7f8] text-black">
+        <div
+          className="relative h-32 overflow-hidden"
+          style={{ background: profile.bannerStyle }}
+        >
+          {profile.bannerUrl ? (
+            <img
+              src={profile.bannerUrl}
+              alt={`${profile.name} profile banner`}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center px-5 text-center">
+              <p className="text-3xl font-black uppercase italic tracking-tight text-white drop-shadow">
+                {profile.name}
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="px-5 pb-6 text-center">
+          <div className="-mt-10 flex justify-center">
+            <CapperAvatar profile={profile} size="lg" />
+          </div>
+          <p className="mt-4 text-[11px] font-black uppercase tracking-[0.18em] text-[#787982]">
+            {profile.handle}
+          </p>
+          <h2 className="mt-1 text-[32px] font-black leading-tight tracking-tight">
+            {profile.name}
+          </h2>
+          <div className="mt-3 flex items-center justify-center gap-2 text-sm font-black">
+            <span className="text-[#f5a73d]">★★★★★</span>
+            <span>{profile.rating}</span>
+            <span className="font-bold text-[#747680]">· {profile.reviews}</span>
+          </div>
+
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            {profile.tags.map((tag) => (
+              <span
+                key={tag}
+                className="rounded-full border border-[#e0e1e5] bg-white px-3 py-1.5 text-[11px] font-black text-black shadow-sm"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+
+          <div className="mt-6 grid grid-cols-2 divide-x divide-[#d9dbe1]">
+            <div>
+              <p className="text-sm font-black text-[#747680]">Joined</p>
+              <p className="mt-1 text-lg font-black">{profile.joined}</p>
+            </div>
+            <div>
+              <p className="text-sm font-black text-[#747680]">Subscribers</p>
+              <p className="mt-1 text-lg font-black">{profile.subscribers}</p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="mt-6 rounded-xl bg-black px-5 py-3 text-lg font-black text-white"
+          >
+            Join from {profile.price}/{profile.interval}
+          </button>
+        </div>
+      </section>
+
+      <section className="rounded-[24px] border border-dub-border bg-dub-card p-4">
+        <p className="text-[11px] font-black uppercase tracking-[0.18em] text-dub-muted">
+          Which plan is right for you?
+        </p>
+        <div className="mt-4 rounded-2xl border border-white/10 bg-black/25 p-4">
+          <div className="flex items-start gap-3">
+            <CreditCard className="mt-1 text-dub-green" size={20} />
+            <div>
+              <h3 className="text-xl font-black text-white">{profile.planName}</h3>
+              <p className="mt-3 text-sm font-bold text-dub-muted">Starting at</p>
+              <p className="mt-1 text-[34px] font-black leading-none text-white">
+                {profile.price}{" "}
+                <span className="text-base font-black text-dub-muted">/ {profile.interval}</span>
+              </p>
+              <p className="mt-2 text-lg font-black text-dub-green">
+                or as low as {profile.dailyPrice}
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-5 border-t border-white/10 pt-4">
+            <p className="text-sm font-black text-white">All access</p>
+            <p className="mt-3 text-[11px] font-black uppercase tracking-[0.16em] text-dub-muted">
+              Post delivery
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {profile.delivery.map((channel) => (
+                <span
+                  key={channel}
+                  className="rounded-xl border border-white/10 bg-dub-green px-3 py-2 text-xs font-black text-black"
+                >
+                  {channel}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-[24px] border border-dub-border bg-dub-card p-4">
+        <p className="text-[11px] font-black uppercase tracking-[0.18em] text-dub-muted">
+          About {profile.name}
+        </p>
+        <p className="mt-3 text-sm font-semibold leading-relaxed text-white/82">{profile.bio}</p>
+      </section>
+    </div>
   );
 }
 
