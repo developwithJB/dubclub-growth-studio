@@ -3,7 +3,12 @@ export type PlayStatus = "Needs Review" | "Needs More Detail" | "Active" | "Line
 export type PlaySource = "nba-playoff" | "wnba" | "nhl-playoff" | "mlb-hype";
 export type CapperId = "greeklocks" | "propgeekzeke" | "theparlayplug" | "skohty";
 export type AgentStyle = "proof-first" | "sharp-breakdown" | "high-energy" | "premium-minimal";
-export type MirrorVoice = "original" | CapperId;
+export type SocialClipFormat =
+  | "face-cam-hook"
+  | "split-screen-breakdown"
+  | "caption-first"
+  | "proof-card-montage"
+  | "podcast-clip";
 export type AgentCreativeChannel = "YouTube Shorts" | "IG/TikTok" | "Audio";
 
 export type CapperProfile = {
