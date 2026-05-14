@@ -360,8 +360,6 @@ function StudioTab({
         </div>
       </section>
 
-      <ProductLoopMini />
-
       <section className="space-y-3">
         <div className="grid grid-cols-2 gap-2">
           {sampleOptions.map((sample) => {
@@ -416,15 +414,6 @@ function StudioTab({
           })}
         </div>
 
-        <button
-          type="button"
-          onClick={onGenerate}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-dub-green px-4 py-3 text-[15px] font-black text-black shadow-glow transition hover:bg-white"
-        >
-          <Wand2 size={18} strokeWidth={2.8} />
-          Generate Structured Play
-        </button>
-
         <div className="rounded-2xl border border-dub-border bg-dub-card p-3">
           <div className="flex items-center justify-between gap-3">
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-dub-muted">
@@ -439,6 +428,15 @@ function StudioTab({
             Read-only local samples. Lines are mocked.
           </p>
         </div>
+
+        <button
+          type="button"
+          onClick={onGenerate}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-dub-green px-4 py-3 text-[15px] font-black text-black shadow-glow transition hover:bg-white"
+        >
+          <Wand2 size={18} strokeWidth={2.8} />
+          Generate Structured Play
+        </button>
       </section>
 
       {play ? (
@@ -1831,7 +1829,7 @@ function CapperDetailPage({
   onBack: () => void;
 }) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pt-1">
       <button
         type="button"
         onClick={onBack}
@@ -1842,14 +1840,14 @@ function CapperDetailPage({
 
       <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[#f7f7f8] text-black">
         <div
-          className="relative h-36 overflow-hidden"
+          className="relative h-32 overflow-hidden"
           style={{ background: profile.bannerStyle }}
         >
           {profile.bannerUrl ? (
             <img
               src={profile.bannerUrl}
               alt={`${profile.name} profile banner`}
-              className="h-full w-full object-cover"
+              className="h-full w-full object-cover object-center"
             />
           ) : (
             <div className="flex h-full items-center justify-center px-5 text-center">
@@ -1860,8 +1858,8 @@ function CapperDetailPage({
           )}
         </div>
 
-        <div className="px-5 pb-6 pt-0 text-center">
-          <div className="-mt-10 flex justify-center">
+        <div className="px-5 pb-6 pt-3 text-center">
+          <div className="flex justify-center">
             <CapperAvatar profile={profile} size="lg" />
           </div>
           <p className="mt-4 text-[11px] font-black uppercase tracking-[0.18em] text-[#787982]">
@@ -2014,9 +2012,13 @@ function InsightsTab({ play }: { play: StructuredPlay | null }) {
         <p className="mt-2 text-[20px] font-black leading-tight text-white">
           Post a short recap tonight and save the best clip format for the next WNBA slate.
         </p>
-        <p className="mt-2 text-sm font-semibold leading-relaxed text-white/78">
-          Keep the capper moving with one concrete action instead of another analytics report.
-        </p>
+        <button
+          type="button"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-dub-green px-4 py-3 text-sm font-black text-black shadow-glow transition hover:bg-white"
+        >
+          <Clapperboard size={17} strokeWidth={2.8} />
+          Start Postgame Recap
+        </button>
       </section>
 
       <section className="rounded-2xl border border-dub-border bg-dub-card p-4">
