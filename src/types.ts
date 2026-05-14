@@ -1,6 +1,7 @@
 export type PlayStatus = "Needs Review" | "Needs More Detail" | "Active" | "Line-sensitive";
 
-export type PlaySource = "nba-playoff" | "wnba" | "nhl-playoff" | "mlb-hype";
+export type PlaySource = "nba-playoff" | "wnba" | "wnba-sheet" | "nhl-playoff" | "mlb-hype";
+export type PlayFormat = "single" | "slate";
 export type CapperId = "greeklocks" | "propgeekzeke" | "theparlayplug" | "skohty";
 export type AgentStyle = "proof-first" | "sharp-breakdown" | "high-energy" | "premium-minimal";
 export type SocialClipFormat =
@@ -33,9 +34,31 @@ export type CapperProfile = {
   delivery: string[];
 };
 
+export type StructuredPlayLeg = {
+  id: string;
+  team: string;
+  teamName: string;
+  teamColor: string;
+  teamLogoUrl?: string;
+  opponentLogoUrl?: string;
+  player: string;
+  playerInitials: string;
+  playerImageUrl?: string;
+  pick: string;
+  odds: string;
+  book: string;
+  unitSize: string;
+  league: string;
+  market: string;
+  playType: string;
+  riskNote: string;
+  missingContext: string[];
+};
+
 export type StructuredPlay = {
   id: string;
   source: PlaySource;
+  format: PlayFormat;
   eventLabel: string;
   eventDate: string;
   player?: string;
@@ -49,6 +72,7 @@ export type StructuredPlay = {
   riskFlag: string;
   qualityScore: number;
   status: PlayStatus;
+  legs?: StructuredPlayLeg[];
   suggestedRewrite?: string;
 };
 
@@ -81,6 +105,7 @@ export type AgentCreativeOption = {
 
 export type InboxPlay = {
   id: string;
+  format?: PlayFormat;
   capperId: CapperId;
   capper: string;
   pick: string;
@@ -88,4 +113,11 @@ export type InboxPlay = {
   playableTo: string;
   note: string;
   status: PlayStatus;
+  leg?: StructuredPlayLeg;
+  legs?: StructuredPlayLeg[];
+  proofBadges?: string[];
+  record?: string;
+  roi?: string;
+  subscribers?: string;
+  recentForm?: string;
 };

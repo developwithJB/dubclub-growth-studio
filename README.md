@@ -14,14 +14,14 @@ DubClub already helps cappers monetize and distribute plays. Growth Studio moves
 
 The bet is not that AI helps cappers make better picks. The bet is that structured publishing helps cappers publish faster, fans act with more trust, and DubClub gets cleaner data for notifications, tailing, recaps, retention, and creator coaching.
 
-## Short Review Guide For Jeff
+## Short Review Guide For FirstBasketMan
 
 Review this through the lens of a capper who has already sold on DubClub:
 
-- **Studio**: starts with how cappers actually think: rough shorthand, line sensitivity, unit size, and risk notes. The AI does not make the pick; it turns the capper's own signal into a reviewable card.
-- **Growth Pack**: makes the approved play useful across DubClub, push, X, Discord/SMS, short-form video, and audio. The AI Agent Layer applies social clip formats to the structured play instead of copying another capper's content.
-- **Trust Inbox**: shows the subscriber experience: clean card, capper context, playable-to number, responsible-play reminder, and `Tail Pick`.
-- **Insights**: shows the business loop: what drove opens, tails, saves, replies, short-form views, and audio completion.
+- **Studio**: starts with how cappers actually work: shorthand, sheet-style model outputs, line sensitivity, unit size, and risk notes. The AI does not make the pick; it turns the capper's own signal into a reviewable card or slate.
+- **Growth Pack**: makes approved plays useful across DubClub, push, X, Discord/SMS, short-form video, and audio. The AI Agent Layer applies social clip formats to the structured play instead of copying another capper's content.
+- **Capper Feed**: shows the subscriber experience: clean cards, capper proof, playable-to number, responsible-play reminder, and `Tail Pick`.
+- **Insights**: shows the business loop: what drove opens, tails, saves, replies, short-form views, audio completion, and capper behavior trends.
 - **Guardrail**: the held MLB hype draft shows the trust logic. Incomplete or hype-heavy content is blocked before it reaches fans.
 
 The core question: would this help a real capper publish faster, look more professional, protect subscriber trust, and learn what actually drives paid fan action?
@@ -34,8 +34,8 @@ The core question: would this help a real capper publish faster, look more profe
 2. **Growth Pack**  
    Convert one approved play into channel-ready assets for DubClub, push, X, Discord/SMS, YouTube Shorts, IG/TikTok, and audio. A mocked AI Agent Layer can package the play into static creative concepts using template style and social clip format controls.
 
-3. **Trust Inbox**  
-   Subscribers receive structured plays, confirm the line, view DubClub-style capper cards, open capper detail pages, and tail only publishable picks.
+3. **Capper Feed**  
+   Subscribers receive structured plays, review capper proof, confirm the line, open DubClub-style capper detail pages, and tail only publishable picks.
 
 4. **Insights**  
    Close the loop with mock creator performance metrics, channel performance, and next-action coaching.
@@ -45,8 +45,8 @@ The core question: would this help a real capper publish faster, look more profe
 The prototype uses real event context with mocked pick lines and mocked AI behavior:
 
 - **NBA Playoff Sample**: San Antonio at Minnesota, Game 6, Friday, May 15, 2026.
-- **WNBA Sample**: Minnesota Lynx at Dallas Wings, Thursday, May 14, 2026.
 - **NHL Playoff Sample**: Vegas Golden Knights at Anaheim Ducks, Game 6, Thursday, May 14, 2026.
+- **FirstBasketMan Sheet Sample**: a FirstBasketMan-style WNBA sheet with two mocked longshot positions: `LVA - A'ja Wilson +500 FD .25u` and `ATL - Angel Reese +600 DK .2u`.
 - **Held MLB Hype Draft**: San Francisco Giants at Los Angeles Dodgers, Thursday, May 14, 2026.
 
 Event schedules are used for demo context only. Pick lines, reasoning, quality scores, and generated content are deterministic mock data.
@@ -59,7 +59,7 @@ The prototype uses a simple local rule:
 qualityScore >= 70
 ```
 
-Publishable plays show an `Approve & Build Growth Pack` action. Low-quality or hype-heavy drafts are held before Growth Pack delivery, Trust Inbox delivery, and fan tailing.
+Publishable plays show an `Approve & Build Growth Pack` action. Low-quality or hype-heavy drafts are held before Growth Pack delivery, Capper Feed delivery, and fan tailing.
 
 The MLB Dodgers hype draft is intentionally held because it lacks unit size, price, starting-pitcher context, reasoning, and a playable-to number.
 
@@ -68,10 +68,13 @@ The MLB Dodgers hype draft is intentionally held because it lacks unit size, pri
 - AI-assisted structuring without AI-generated picks.
 - Human-in-the-loop capper review before distribution.
 - A clear path from review approval into multi-channel growth assets.
-- Fan-facing trust cards that only expose publishable plays.
+- Fan-facing capper cards that pair publishable plays with proof metadata and tail actions.
+- Real team logos and player headshots in play cards for faster scanning.
 - Channel-level growth thinking across text, audio, and short-form video.
 - Mocked AI Agent creative packaging for YouTube Shorts, IG/TikTok, and audio reads.
 - DubClub-inspired capper profile cards and detail pages using branded profile patterns.
+- Sheet-style slate parsing that can package multiple plays into one review and one Growth Pack.
+- Capper behavior insights such as plays by league, team, player, market, book, best post time, and subscriber response.
 - Strategic restraint: no backend, no auth, no sportsbook integrations, and no live odds infrastructure.
 
 ## Product Boundaries And Next Steps
@@ -147,9 +150,10 @@ npm run build
 4. Click `Approve & Build Growth Pack`.
 5. Filter Growth Pack by short-form or audio to show multi-channel actionability.
 6. In the AI Agent Layer, switch template style and clip format to show channel-native creative packaging.
-7. Open Trust Inbox, tap a capper profile, return, and tail a publishable play.
-8. Open Insights and show the creator performance loop.
-9. Return to Studio, generate the Held MLB Hype Draft, and show that Growth Studio blocks incomplete/hype-heavy content before fan delivery.
+7. Return to Studio, generate the FirstBasketMan Sheet Sample, approve it, and show slate-aware Growth Pack assets.
+8. Open Capper Feed, tap a capper profile, return, and tail a publishable play.
+9. Open Insights and show the creator performance loop plus capper behavior breakdowns.
+10. Return to Studio, generate the Held MLB Hype Draft, and show that Growth Studio blocks incomplete/hype-heavy content before fan delivery.
 
 ## Full Overview
 

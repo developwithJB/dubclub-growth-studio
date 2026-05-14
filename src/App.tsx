@@ -16,6 +16,7 @@ import {
   Play,
   Plus,
   Radio,
+  RefreshCw,
   Send,
   ShieldCheck,
   SlidersHorizontal,
@@ -43,7 +44,8 @@ import type {
   CapperProfile,
   InboxPlay,
   SocialClipFormat,
-  StructuredPlay
+  StructuredPlay,
+  StructuredPlayLeg
 } from "./types";
 
 type Tab = "studio" | "growth" | "trust" | "insights";
@@ -60,7 +62,7 @@ type GrowthChannel =
 const tabs: Array<{ id: Tab; label: string; icon: typeof Wand2 }> = [
   { id: "studio", label: "Studio", icon: Wand2 },
   { id: "growth", label: "Growth Pack", icon: Package },
-  { id: "trust", label: "Trust Inbox", icon: Inbox },
+  { id: "trust", label: "Capper Feed", icon: Inbox },
   { id: "insights", label: "Insights", icon: BarChart3 }
 ];
 
@@ -96,7 +98,8 @@ const PUBLISHABLE_SCORE = 70;
 const isPublishablePlay = (play: StructuredPlay | null | undefined) =>
   Boolean(play && play.qualityScore >= PUBLISHABLE_SCORE);
 
-const playTitle = (play: StructuredPlay) => (play.player ? `${play.player} ${play.pick}` : play.pick);
+const playTitle = (play: StructuredPlay) =>
+  play.format === "slate" ? play.pick : play.player ? `${play.player} ${play.pick}` : play.pick;
 
 const scoreTone = (score: number) =>
   score >= 70
@@ -122,7 +125,7 @@ function App() {
 
     if (activeTab === "trust") {
       return (
-        <TrustInboxTab
+        <CapperFeedTab
           play={play}
           tailedPlays={tailedPlays}
           confirmationId={confirmationId}
@@ -200,12 +203,12 @@ function ProductLoopMini() {
   const steps = ["Raw", "Review", "Pack", "Fan", "Insight"];
 
   return (
-    <section className="rounded-2xl border border-white/10 bg-black/25 p-3">
+    <section className="rounded-2xl border border-white/10 bg-black/25 p-2.5">
       <div className="flex items-center justify-between gap-1">
         {steps.map((step, index) => (
           <div key={step} className="flex min-w-0 flex-1 items-center gap-1">
             <span
-              className={`block min-w-0 flex-1 rounded-full px-2 py-1.5 text-center text-[10px] font-black uppercase tracking-[0.08em] ${
+              className={`block min-w-0 flex-1 rounded-full px-2 py-1.5 text-center text-[9px] font-black uppercase tracking-[0.08em] ${
                 index === 0 ? "bg-dub-green text-black" : "bg-white/8 text-white"
               }`}
             >
@@ -273,32 +276,29 @@ function StudioTab({
   const sampleOptions = [
     {
       id: "nba-playoff",
-      label: "NBA Playoff Sample",
+      label: "NBA Playoff",
       event: "Spurs at Timberwolves, Game 6",
       date: "Fri, May 15",
-      description: "Publishable player prop for the next official NBA playoff game.",
       value: examples.nbaPlayoff,
       sport: "NBA",
       tone: "green",
       status: "Publishable"
     },
     {
-      id: "wnba",
-      label: "WNBA Sample",
-      event: "Lynx at Wings",
+      id: "wnba-sheet",
+      label: "FirstBasketMan Sheet",
+      event: "Aces + Dream longshots",
       date: "Thu, May 14",
-      description: "Publishable early-season usage angle.",
-      value: examples.wnba,
+      value: examples.wnbaSheet,
       sport: "WNBA",
       tone: "green",
-      status: "Publishable"
+      status: "Slate"
     },
     {
       id: "nhl-playoff",
-      label: "NHL Playoff Sample",
+      label: "NHL Playoff",
       event: "Golden Knights at Ducks, Game 6",
       date: "Thu, May 14",
-      description: "Publishable playoff total with risk note.",
       value: examples.nhlPlayoff,
       sport: "NHL",
       tone: "green",
@@ -306,10 +306,9 @@ function StudioTab({
     },
     {
       id: "mlb-hype",
-      label: "Held MLB Hype Draft",
+      label: "Held MLB Draft",
       event: "Giants at Dodgers",
       date: "Thu, May 14",
-      description: "Incomplete hype draft held before fan delivery.",
       value: examples.mlbHype,
       sport: "MLB",
       tone: "amber",
@@ -330,36 +329,34 @@ function StudioTab({
   }, [play]);
 
   return (
-    <div className="space-y-4">
-      <PageIntro
-        title="Studio"
-        subtitle="Pick a real event sample and generate the capper review."
-        chip="Capper review workflow"
-      />
+    <div className="space-y-3">
+      <section className="flex items-end justify-between gap-3">
+        <div>
+          <h1 className="text-[28px] font-black leading-none tracking-tight text-white">Studio</h1>
+          <p className="mt-1 text-[13px] font-bold leading-snug text-dub-muted">
+            Pick a sample. Generate the review.
+          </p>
+        </div>
+        <span className="shrink-0 rounded-full border border-dub-green/25 bg-dub-green/10 px-3 py-1 text-[9px] font-black uppercase tracking-[0.12em] text-dub-green">
+          Local samples
+        </span>
+      </section>
 
-      <section className="rounded-[24px] border border-dub-green/25 bg-[linear-gradient(145deg,rgba(54,255,34,0.20),rgba(23,23,25,0.92)_48%,rgba(5,5,6,0.98))] p-5 shadow-glow">
-        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-dub-green">
-          Growth Studio
-        </p>
-        <h2 className="mt-3 text-[34px] font-black leading-[0.96] tracking-tight text-white">
-          Raw signal <span className="text-dub-green">&rarr;</span> trusted play card
+      <section className="rounded-[22px] border border-dub-green/25 bg-[linear-gradient(145deg,rgba(54,255,34,0.18),rgba(23,23,25,0.92)_50%,rgba(5,5,6,0.98))] p-4 shadow-glow">
+        <h2 className="text-[28px] font-black leading-none tracking-tight text-white">
+          Raw signal <span className="text-dub-green">&rarr;</span> review card
         </h2>
-        <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-stretch gap-2">
-          <div className="rounded-2xl border border-white/10 bg-black/30 p-3">
-            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-dub-muted">
-              Before
-            </p>
-            <p className="mt-2 text-sm font-black leading-tight text-white">Messy shorthand</p>
-          </div>
-          <div className="grid place-items-center text-dub-green">
-            <Wand2 size={20} strokeWidth={3} />
-          </div>
-          <div className="rounded-2xl border border-dub-green/30 bg-dub-green/10 p-3">
-            <p className="text-[10px] font-black uppercase tracking-[0.16em] text-dub-green">
-              After
-            </p>
-            <p className="mt-2 text-sm font-black leading-tight text-white">Capper review</p>
-          </div>
+        <div className="mt-3 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.12em]">
+          <span className="rounded-full border border-white/10 bg-black/30 px-3 py-2 text-dub-muted">
+            Shorthand
+          </span>
+          <Wand2 size={17} className="text-dub-green" strokeWidth={3} />
+          <span className="rounded-full border border-dub-green/30 bg-dub-green/10 px-3 py-2 text-dub-green">
+            Structured
+          </span>
+          <span className="rounded-full border border-white/10 bg-black/30 px-3 py-2 text-white">
+            Actionable
+          </span>
         </div>
       </section>
 
@@ -385,14 +382,14 @@ function StudioTab({
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <p className="text-[13px] font-black leading-tight text-white">{sample.label}</p>
+                  <p className="text-[14px] font-black leading-tight text-white">{sample.label}</p>
                   <span
                     className={`mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full ${
                       isSelected ? (isAmber ? "bg-dub-amber" : "bg-dub-green") : "bg-white/20"
                     }`}
                   />
                 </div>
-                <div className="mt-3 flex flex-wrap gap-1.5">
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
                   <span
                     className={`rounded-full px-2 py-1 text-[9px] font-black uppercase tracking-[0.08em] ${
                       isAmber ? "bg-dub-amber/15 text-dub-amber" : "bg-dub-green/15 text-dub-green"
@@ -414,15 +411,21 @@ function StudioTab({
                 <p className="mt-2 text-[11px] font-black leading-snug text-white">
                   {sample.event}
                 </p>
-                <p className="mt-1.5 text-[11px] font-semibold leading-snug text-dub-muted">
-                  {sample.description}
-                </p>
               </button>
             );
           })}
         </div>
 
-        <div className="rounded-2xl border border-dub-border bg-dub-card p-4">
+        <button
+          type="button"
+          onClick={onGenerate}
+          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-dub-green px-4 py-3 text-[15px] font-black text-black shadow-glow transition hover:bg-white"
+        >
+          <Wand2 size={18} strokeWidth={2.8} />
+          Generate Structured Play
+        </button>
+
+        <div className="rounded-2xl border border-dub-border bg-dub-card p-3">
           <div className="flex items-center justify-between gap-3">
             <p className="text-[10px] font-black uppercase tracking-[0.18em] text-dub-muted">
               Selected raw signal
@@ -431,21 +434,11 @@ function StudioTab({
               Read-only
             </span>
           </div>
-          <p className="mt-3 text-[15px] font-black leading-relaxed text-white">{rawInput}</p>
-          <p className="mt-3 text-xs font-bold text-dub-muted">
-            Sample signals are read-only in this build. Event context is real; pick lines are sample
-            data.
+          <p className="mt-2 text-[13px] font-black leading-relaxed text-white">{rawInput}</p>
+          <p className="mt-2 text-[11px] font-bold text-dub-muted">
+            Read-only local samples. Lines are mocked.
           </p>
         </div>
-
-        <button
-          type="button"
-          onClick={onGenerate}
-          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-dub-green px-4 py-4 text-[16px] font-black text-black shadow-glow transition hover:bg-white"
-        >
-          <Wand2 size={20} strokeWidth={2.8} />
-          Generate Structured Play
-        </button>
       </section>
 
       {play ? (
@@ -481,7 +474,7 @@ function StructuredReviewCard({
               !publishable ? "text-dub-amber" : "text-dub-green"
             }`}
           >
-            Structured Play Review
+            {play.format === "slate" ? "Structured Slate Review" : "Structured Play Review"}
           </p>
           <h2 className="mt-2 text-[26px] font-black leading-tight tracking-tight text-white">
             {playTitle(play)}
@@ -497,6 +490,12 @@ function StructuredReviewCard({
           </p>
         </div>
       </div>
+
+      {play.legs?.length ? (
+        <div className="mt-5">
+          <PlayVisualRows legs={play.legs} />
+        </div>
+      ) : null}
 
       <div
         className={`mt-5 rounded-2xl border p-4 ${
@@ -631,6 +630,121 @@ function StructuredReviewCard({
   );
 }
 
+function PlayVisualRows({
+  legs,
+  compact = false
+}: {
+  legs: StructuredPlayLeg[];
+  compact?: boolean;
+}) {
+  return (
+    <div className="grid gap-2">
+      {legs.map((leg) => (
+        <PlayVisualRow key={leg.id} leg={leg} compact={compact} />
+      ))}
+    </div>
+  );
+}
+
+function PlayVisualRow({
+  leg,
+  compact = false
+}: {
+  leg: StructuredPlayLeg;
+  compact?: boolean;
+}) {
+  const [teamImageFailed, setTeamImageFailed] = useState(false);
+  const [opponentImageFailed, setOpponentImageFailed] = useState(false);
+  const [playerImageFailed, setPlayerImageFailed] = useState(false);
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/25 p-3">
+      <div className="flex items-center gap-3">
+        <div
+          className={`${compact ? "h-10 w-10 text-xs" : "h-12 w-12 text-sm"} relative grid shrink-0 place-items-center rounded-2xl border border-white/15 bg-white p-1 font-black text-black shadow-lg`}
+          style={{ background: `linear-gradient(135deg, ${leg.teamColor}, #050506)` }}
+        >
+          {leg.teamLogoUrl && !teamImageFailed ? (
+            <img
+              src={leg.teamLogoUrl}
+              alt={`${leg.teamName} logo`}
+              className="h-full w-full object-contain drop-shadow"
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              onError={() => setTeamImageFailed(true)}
+            />
+          ) : (
+            leg.team
+          )}
+          {leg.opponentLogoUrl && !opponentImageFailed ? (
+            <span className="absolute -bottom-1 -right-1 grid h-5 w-5 place-items-center rounded-full border border-white bg-white p-0.5 shadow">
+              <img
+                src={leg.opponentLogoUrl}
+                alt="Opponent logo"
+                className="h-full w-full object-contain"
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                onError={() => setOpponentImageFailed(true)}
+              />
+            </span>
+          ) : null}
+        </div>
+        <div
+          className={`${compact ? "h-9 w-9 text-xs" : "h-11 w-11 text-sm"} grid shrink-0 place-items-center overflow-hidden rounded-full border-2 border-white bg-dub-green font-black text-black shadow-lg`}
+        >
+          {leg.playerImageUrl && !playerImageFailed ? (
+            <img
+              src={leg.playerImageUrl}
+              alt={`${leg.player} headshot`}
+              className="h-full w-full object-cover"
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              onError={() => setPlayerImageFailed(true)}
+            />
+          ) : (
+            leg.playerInitials
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className={`${compact ? "text-sm" : "text-base"} truncate font-black text-white`}>
+            {leg.player}
+          </p>
+          <p className="mt-0.5 truncate text-xs font-bold text-dub-muted">
+            {leg.teamName} · {leg.playType}
+          </p>
+        </div>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <VisualChip label={leg.league} />
+        <VisualChip label={leg.book} tone={leg.book === "Missing" ? "warn" : "default"} />
+        <VisualChip label={leg.odds} tone={leg.odds === "Missing" ? "warn" : "default"} />
+        <VisualChip label={leg.unitSize} tone={leg.unitSize === "Missing" ? "warn" : "green"} />
+      </div>
+    </div>
+  );
+}
+
+function VisualChip({
+  label,
+  tone = "default"
+}: {
+  label: string;
+  tone?: "default" | "green" | "warn";
+}) {
+  const classes =
+    tone === "green"
+      ? "bg-dub-green text-black"
+      : tone === "warn"
+        ? "border-dub-amber/40 bg-dub-amber/10 text-dub-amber"
+        : "border-white/10 bg-white/8 text-white";
+
+  return (
+    <span className={`rounded-full border px-2.5 py-1 text-[10px] font-black ${classes}`}>
+      {label}
+    </span>
+  );
+}
+
 function GrowthPackTab({ play }: { play: StructuredPlay | null }) {
   const displayPlay = play ?? defaultDemoPlay;
   const publishable = isPublishablePlay(displayPlay);
@@ -639,7 +753,13 @@ function GrowthPackTab({ play }: { play: StructuredPlay | null }) {
   const [activeChannel, setActiveChannel] = useState<GrowthChannel>("All");
   const [agentStyle, setAgentStyle] = useState<AgentStyle>("proof-first");
   const [clipFormat, setClipFormat] = useState<SocialClipFormat>("face-cam-hook");
-  const creativeOptions = generateAgentCreativeOptions(displayPlay, agentStyle, clipFormat);
+  const [creativeVariant, setCreativeVariant] = useState(1);
+  const creativeOptions = generateAgentCreativeOptions(
+    displayPlay,
+    agentStyle,
+    clipFormat,
+    creativeVariant
+  );
   const visibleCreativeOptions =
     activeChannel === "All"
       ? creativeOptions
@@ -795,7 +915,7 @@ function GrowthPackTab({ play }: { play: StructuredPlay | null }) {
     <div className="space-y-4">
       <PageIntro
         title="Growth Pack"
-        subtitle="Turn one structured play into a full creator growth package."
+        subtitle="Turn approved plays into a full creator growth package."
         chip="Package once, distribute everywhere"
       />
       <GrowthSourceCard play={displayPlay} publishable={publishable} />
@@ -812,9 +932,11 @@ function GrowthPackTab({ play }: { play: StructuredPlay | null }) {
           options={visibleCreativeOptions}
           agentStyle={agentStyle}
           clipFormat={clipFormat}
+          creativeVariant={creativeVariant}
           completedActions={completedActions}
           onStyleChange={setAgentStyle}
           onClipFormatChange={setClipFormat}
+          onRegenerate={() => setCreativeVariant((current) => (current % 3) + 1)}
           onAction={(optionId) => {
             const actionId = `${displayPlay.id}:agent:${optionId}`;
             setCompletedActions((current) =>
@@ -859,9 +981,11 @@ function AIAgentLayer({
   options,
   agentStyle,
   clipFormat,
+  creativeVariant,
   completedActions,
   onStyleChange,
   onClipFormatChange,
+  onRegenerate,
   onAction
 }: {
   play: StructuredPlay;
@@ -870,9 +994,11 @@ function AIAgentLayer({
   options: AgentCreativeOption[];
   agentStyle: AgentStyle;
   clipFormat: SocialClipFormat;
+  creativeVariant: number;
   completedActions: string[];
   onStyleChange: (style: AgentStyle) => void;
   onClipFormatChange: (format: SocialClipFormat) => void;
+  onRegenerate: () => void;
   onAction: (optionId: string) => void;
 }) {
   const sourceProfile = getCapperProfileForPlay(play);
@@ -904,7 +1030,7 @@ function AIAgentLayer({
       </div>
       <div className="mt-4 max-w-none">
         <h2 className="text-[30px] font-black leading-[1.02] tracking-tight text-white">
-          Build media from this play
+          {play.format === "slate" ? "Build media from this slate" : "Build media from this play"}
         </h2>
         <p className="mt-3 text-[15px] font-semibold leading-relaxed text-white/75">
           Choose a clip format, review the draft, then queue the assets you want to use.
@@ -939,6 +1065,28 @@ function AIAgentLayer({
         selected={clipFormat}
         onSelect={onClipFormatChange}
       />
+
+      <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/25 p-3">
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-[0.16em] text-dub-muted">
+            Concept set
+          </p>
+          <p className="mt-1 text-sm font-black text-white">Variant {creativeVariant} of 3</p>
+        </div>
+        <button
+          type="button"
+          disabled={!publishable}
+          onClick={onRegenerate}
+          className={`flex shrink-0 items-center gap-2 rounded-full border px-3 py-2 text-[11px] font-black transition ${
+            publishable
+              ? "border-dub-green/35 bg-dub-green/10 text-dub-green hover:bg-dub-green hover:text-black"
+              : "cursor-not-allowed border-dub-amber/25 bg-dub-amber/10 text-dub-amber"
+          }`}
+        >
+          <RefreshCw size={14} strokeWidth={2.6} />
+          Regenerate concepts
+        </button>
+      </div>
 
       {!publishable ? (
         <div className="mt-4 flex gap-3 rounded-2xl border border-dub-amber/35 bg-dub-amber/10 p-3">
@@ -1116,7 +1264,10 @@ function AgentCreativeThumbnail({
               <span
                 key={index}
                 className="w-full rounded-full bg-dub-green"
-                style={{ height: `${22 + ((index * 17) % 34)}px`, opacity: 0.45 + (index % 4) * 0.12 }}
+                style={{
+                  height: `${22 + ((index * 17) % 34)}px`,
+                  opacity: 0.45 + (index % 4) * 0.12
+                }}
               />
             ))}
           </div>
@@ -1229,7 +1380,7 @@ function ChannelMixRow({
 
           return (
             <button
-            key={channel}
+              key={channel}
               type="button"
               onClick={() => onChange(channel)}
               className={`rounded-full border px-3 py-1.5 text-[11px] font-black transition ${
@@ -1237,8 +1388,8 @@ function ChannelMixRow({
                   ? "border-dub-green bg-dub-green text-black shadow-glow"
                   : "border-white/10 bg-black/25 text-white hover:border-dub-green/40"
               }`}
-          >
-            {channel}
+            >
+              {channel}
             </button>
           );
         })}
@@ -1299,14 +1450,24 @@ function GrowthSourceCard({
             Quality score {play.qualityScore} · {publishable ? "ready for action" : "held draft"}
           </p>
         </div>
-        <span
-          className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${
-            publishable ? "bg-dub-green text-black" : "bg-dub-amber text-black"
-          }`}
-        >
-          {publishable ? "Actionable" : "Held"}
-        </span>
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <span
+            className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] ${
+              publishable ? "bg-dub-green text-black" : "bg-dub-amber text-black"
+            }`}
+          >
+            {publishable ? "Actionable" : "Held"}
+          </span>
+          <span className="rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-white">
+            {play.format === "slate" ? "Slate / Multi-Play" : "Single Play"}
+          </span>
+        </div>
       </div>
+      {play.legs?.length ? (
+        <div className="mt-4">
+          <PlayVisualRows legs={play.legs} compact />
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -1377,7 +1538,7 @@ function GrowthCard({
   );
 }
 
-function TrustInboxTab({
+function CapperFeedTab({
   play,
   tailedPlays,
   confirmationId,
@@ -1395,6 +1556,10 @@ function TrustInboxTab({
   const inboxPlays = [generatedInboxPlay, ...mockInboxPlays];
   const selectedCapper = selectedCapperId ? capperProfiles[selectedCapperId] : null;
 
+  useEffect(() => {
+    document.querySelector("main")?.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+  }, [selectedCapperId]);
+
   if (selectedCapper) {
     return <CapperDetailPage profile={selectedCapper} onBack={() => setSelectedCapperId(null)} />;
   }
@@ -1402,16 +1567,16 @@ function TrustInboxTab({
   return (
     <div className="space-y-5">
       <PageIntro
-        title="Trust Inbox"
-        subtitle="Subscriber-ready cards for quick, line-sensitive action."
-        chip="Fan-facing trust surface"
+        title="Capper Feed"
+        subtitle="Subscriber-ready cards with proof, context, and tail actions."
+        chip="Credibility + action"
       />
       {heldDraft ? (
         <HeldDraftWarning>
           {`Latest draft held: ${heldDraft.pick} needs unit size, price, event context, reasoning, and playable-to number before subscribers see it.`}
         </HeldDraftWarning>
       ) : null}
-      <TrustActionGuide />
+      <CapperFeedGuide />
 
       <section className="flex items-end justify-between gap-3">
         <div>
@@ -1481,13 +1646,13 @@ function TrustInboxTab({
   );
 }
 
-function TrustActionGuide() {
-  const steps = ["Review card", "Confirm line", "Tail Pick"];
+function CapperFeedGuide() {
+  const steps = ["Check capper", "Confirm line", "Tail Pick"];
 
   return (
     <section className="rounded-2xl border border-dub-green/25 bg-dub-green/10 p-4">
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-dub-green">
-        Tail flow
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-dub-green">
+        Feed flow
       </p>
       <div className="mt-3 grid grid-cols-3 gap-2">
         {steps.map((step, index) => (
@@ -1500,8 +1665,7 @@ function TrustActionGuide() {
         ))}
       </div>
       <p className="mt-3 text-sm font-semibold leading-relaxed text-white/78">
-        Fans only see structured, publishable plays. Held drafts stay internal until the capper adds
-        the missing details.
+        Subscriber cards pair the play with capper proof, line context, and a clear action.
       </p>
     </section>
   );
@@ -1550,9 +1714,42 @@ function InboxCard({
         <span className="ml-auto shrink-0 text-lg font-black text-dub-green">&rarr;</span>
       </button>
 
+      <div className="mt-4 flex flex-wrap gap-2">
+        {(play.proofBadges ?? ["Third-Party Tracked"]).map((badge) => (
+          <span
+            key={badge}
+            className="rounded-full border border-dub-green/25 bg-dub-green/10 px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.1em] text-dub-green"
+          >
+            {badge}
+          </span>
+        ))}
+      </div>
+
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        {[
+          ["Record", play.record ?? "Tracked history"],
+          ["ROI", play.roi ?? "Positive form"],
+          ["Subscribers", play.subscribers ?? profile.subscribers],
+          ["Recent Form", play.recentForm ?? "5-2 last 7"]
+        ].map(([label, value]) => (
+          <div key={label} className="rounded-xl border border-white/8 bg-black/25 p-3">
+            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-dub-muted">
+              {label}
+            </p>
+            <p className="mt-1 text-xs font-black leading-tight text-white">{value}</p>
+          </div>
+        ))}
+      </div>
+
       <h3 className="mt-4 text-[24px] font-black leading-tight tracking-tight text-white">
         {play.pick}
       </h3>
+
+      {play.legs?.length ? (
+        <div className="mt-4">
+          <PlayVisualRows legs={play.legs} compact />
+        </div>
+      ) : null}
 
       <div className="mt-4 grid grid-cols-2 gap-3">
         <Field label="Unit Size" value={play.unit} warn={play.unit === "Missing"} />
@@ -1640,12 +1837,12 @@ function CapperDetailPage({
         onClick={onBack}
         className="rounded-full border border-white/10 bg-dub-card px-4 py-2 text-sm font-black text-white transition hover:border-dub-green/40"
       >
-        &larr; Back to Trust Inbox
+        &larr; Back to Capper Feed
       </button>
 
       <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[#f7f7f8] text-black">
         <div
-          className="relative h-32 overflow-hidden"
+          className="relative h-36 overflow-hidden"
           style={{ background: profile.bannerStyle }}
         >
           {profile.bannerUrl ? (
@@ -1663,8 +1860,8 @@ function CapperDetailPage({
           )}
         </div>
 
-        <div className="px-5 pb-6 pt-5 text-center">
-          <div className="flex justify-center">
+        <div className="px-5 pb-6 pt-0 text-center">
+          <div className="-mt-10 flex justify-center">
             <CapperAvatar profile={profile} size="lg" />
           </div>
           <p className="mt-4 text-[11px] font-black uppercase tracking-[0.18em] text-[#787982]">
@@ -1776,6 +1973,15 @@ function InsightsTab({ play }: { play: StructuredPlay | null }) {
     ["Replies", "4"],
     ["Best Lever", "Short-form"]
   ];
+  const behaviorInsights = [
+    ["Plays by League", "WNBA 42%"],
+    ["Plays by Team", "LVA leads"],
+    ["Plays by Player", "A'ja Wilson"],
+    ["Best Market", "Player props"],
+    ["Best Book", "FD"],
+    ["Best Time to Post", "45m pre-tip"],
+    ["Subscriber Response", "Push + Discord"]
+  ];
 
   return (
     <div className="space-y-5">
@@ -1799,6 +2005,40 @@ function InsightsTab({ play }: { play: StructuredPlay | null }) {
             <p className="mt-2 text-[24px] font-black leading-none text-white">{value}</p>
           </div>
         ))}
+      </section>
+
+      <section className="rounded-2xl border border-dub-green/35 bg-[linear-gradient(145deg,rgba(54,255,34,0.16),rgba(23,23,25,0.96))] p-4">
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-dub-green">
+          Next Action
+        </p>
+        <p className="mt-2 text-[20px] font-black leading-tight text-white">
+          Post a short recap tonight and save the best clip format for the next WNBA slate.
+        </p>
+        <p className="mt-2 text-sm font-semibold leading-relaxed text-white/78">
+          Keep the capper moving with one concrete action instead of another analytics report.
+        </p>
+      </section>
+
+      <section className="rounded-2xl border border-dub-border bg-dub-card p-4">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-dub-muted">
+              Capper Behavior
+            </p>
+            <h2 className="mt-1 text-xl font-black text-white">What is working</h2>
+          </div>
+          <Target className="text-dub-green" size={22} />
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {behaviorInsights.map(([label, value]) => (
+            <div key={label} className="rounded-xl border border-white/8 bg-black/25 p-3">
+              <p className="text-[9px] font-black uppercase tracking-[0.14em] text-dub-muted">
+                {label}
+              </p>
+              <p className="mt-1 text-sm font-black leading-tight text-white">{value}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section className="rounded-2xl border border-dub-border bg-dub-card p-4">
@@ -1825,13 +2065,6 @@ function InsightsTab({ play }: { play: StructuredPlay | null }) {
         </div>
         <p className="text-[15px] font-semibold leading-relaxed text-white">
           Use push for urgency, short-form video for discovery, and audio notes for trust.
-        </p>
-      </section>
-
-      <section className="rounded-2xl border border-dub-border bg-dub-card p-4">
-        <p className="text-xs font-black uppercase tracking-[0.18em] text-dub-muted">Next Action</p>
-        <p className="mt-2 text-lg font-black leading-tight text-white">
-          Record a 30-second recap after result and clip it for Reels, TikTok, and Shorts.
         </p>
       </section>
 
