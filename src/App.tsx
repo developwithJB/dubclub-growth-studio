@@ -346,15 +346,15 @@ function StudioTab({
         <h2 className="text-[28px] font-black leading-none tracking-tight text-white">
           Raw signal <span className="text-dub-green">&rarr;</span> review card
         </h2>
-        <div className="mt-3 flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.12em]">
-          <span className="rounded-full border border-white/10 bg-black/30 px-3 py-2 text-dub-muted">
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-[0.1em]">
+          <span className="min-w-0 rounded-full border border-white/10 bg-black/30 px-2.5 py-2 text-dub-muted">
             Shorthand
           </span>
-          <Wand2 size={17} className="text-dub-green" strokeWidth={3} />
-          <span className="rounded-full border border-dub-green/30 bg-dub-green/10 px-3 py-2 text-dub-green">
+          <Wand2 size={16} className="shrink-0 text-dub-green" strokeWidth={3} />
+          <span className="min-w-0 rounded-full border border-dub-green/30 bg-dub-green/10 px-2.5 py-2 text-dub-green">
             Structured
           </span>
-          <span className="rounded-full border border-white/10 bg-black/30 px-3 py-2 text-white">
+          <span className="min-w-0 rounded-full border border-white/10 bg-black/30 px-2.5 py-2 text-white">
             Actionable
           </span>
         </div>
