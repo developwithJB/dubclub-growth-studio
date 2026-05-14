@@ -9,10 +9,8 @@ import {
   Check,
   Clapperboard,
   Clock,
-  ClipboardCheck,
   CreditCard,
   Inbox,
-  Lightbulb,
   Mic,
   Package,
   Play,
@@ -44,7 +42,7 @@ import type {
   AgentStyle,
   CapperProfile,
   InboxPlay,
-  MirrorVoice,
+  SocialClipFormat,
   StructuredPlay
 } from "./types";
 
@@ -84,12 +82,12 @@ const agentStyles: Array<{ id: AgentStyle; label: string }> = [
   { id: "premium-minimal", label: "Premium minimal" }
 ];
 
-const mirrorVoices: Array<{ id: MirrorVoice; label: string }> = [
-  { id: "original", label: "Original voice" },
-  { id: "greeklocks", label: "GreekLocks" },
-  { id: "propgeekzeke", label: "PropGeekZeke" },
-  { id: "theparlayplug", label: "TheParlayPlug" },
-  { id: "skohty", label: "SKOHTY" }
+const socialClipFormats: Array<{ id: SocialClipFormat; label: string }> = [
+  { id: "face-cam-hook", label: "Face-cam hook" },
+  { id: "split-screen-breakdown", label: "Split-screen breakdown" },
+  { id: "caption-first", label: "Caption-first edit" },
+  { id: "proof-card-montage", label: "Proof-card montage" },
+  { id: "podcast-clip", label: "Podcast-style clip" }
 ];
 
 const defaultDemoPlay = generateStructuredPlay(examples.nbaPlayoff);
@@ -336,7 +334,7 @@ function StudioTab({
       <PageIntro
         title="Studio"
         subtitle="Pick a real event sample and generate the capper review."
-        chip="Local sample workflow"
+        chip="Capper review workflow"
       />
 
       <section className="rounded-[24px] border border-dub-green/25 bg-[linear-gradient(145deg,rgba(54,255,34,0.20),rgba(23,23,25,0.92)_48%,rgba(5,5,6,0.98))] p-5 shadow-glow">
@@ -435,8 +433,8 @@ function StudioTab({
           </div>
           <p className="mt-3 text-[15px] font-black leading-relaxed text-white">{rawInput}</p>
           <p className="mt-3 text-xs font-bold text-dub-muted">
-            This prototype uses local sample signals only. Event schedules are real; pick lines are
-            mocked for the prototype.
+            Sample signals are read-only in this build. Event context is real; pick lines are sample
+            data.
           </p>
         </div>
 
@@ -640,8 +638,8 @@ function GrowthPackTab({ play }: { play: StructuredPlay | null }) {
   const [completedActions, setCompletedActions] = useState<string[]>([]);
   const [activeChannel, setActiveChannel] = useState<GrowthChannel>("All");
   const [agentStyle, setAgentStyle] = useState<AgentStyle>("proof-first");
-  const [mirrorVoice, setMirrorVoice] = useState<MirrorVoice>("original");
-  const creativeOptions = generateAgentCreativeOptions(displayPlay, agentStyle, mirrorVoice);
+  const [clipFormat, setClipFormat] = useState<SocialClipFormat>("face-cam-hook");
+  const creativeOptions = generateAgentCreativeOptions(displayPlay, agentStyle, clipFormat);
   const visibleCreativeOptions =
     activeChannel === "All"
       ? creativeOptions
@@ -813,10 +811,10 @@ function GrowthPackTab({ play }: { play: StructuredPlay | null }) {
           activeChannel={activeChannel}
           options={visibleCreativeOptions}
           agentStyle={agentStyle}
-          mirrorVoice={mirrorVoice}
+          clipFormat={clipFormat}
           completedActions={completedActions}
           onStyleChange={setAgentStyle}
-          onMirrorVoiceChange={setMirrorVoice}
+          onClipFormatChange={setClipFormat}
           onAction={(optionId) => {
             const actionId = `${displayPlay.id}:agent:${optionId}`;
             setCompletedActions((current) =>
@@ -825,7 +823,6 @@ function GrowthPackTab({ play }: { play: StructuredPlay | null }) {
           }}
         />
       ) : null}
-      <DoorDashAnalogyCard />
       {!publishable ? (
         <HeldDraftWarning>
           Draft held. Growth Studio will not generate subscriber-ready delivery until required
@@ -861,10 +858,10 @@ function AIAgentLayer({
   activeChannel,
   options,
   agentStyle,
-  mirrorVoice,
+  clipFormat,
   completedActions,
   onStyleChange,
-  onMirrorVoiceChange,
+  onClipFormatChange,
   onAction
 }: {
   play: StructuredPlay;
@@ -872,15 +869,13 @@ function AIAgentLayer({
   activeChannel: GrowthChannel;
   options: AgentCreativeOption[];
   agentStyle: AgentStyle;
-  mirrorVoice: MirrorVoice;
+  clipFormat: SocialClipFormat;
   completedActions: string[];
   onStyleChange: (style: AgentStyle) => void;
-  onMirrorVoiceChange: (voice: MirrorVoice) => void;
+  onClipFormatChange: (format: SocialClipFormat) => void;
   onAction: (optionId: string) => void;
 }) {
   const sourceProfile = getCapperProfileForPlay(play);
-  const mirroredProfile =
-    mirrorVoice === "original" ? sourceProfile : capperProfiles[mirrorVoice];
   const queueActionId = `${play.id}:agent:queue-creative`;
   const queueActioned = completedActions.includes(queueActionId);
   const visibleLabel =
@@ -896,36 +891,35 @@ function AIAgentLayer({
           : "border-dub-amber/35 bg-[#1c1710]"
       }`}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2 text-dub-green">
-            <Sparkles size={18} />
-            <p className="text-xs font-black uppercase tracking-[0.18em]">
-              AI Agent Layer
-            </p>
-          </div>
-          <h2 className="mt-2 text-2xl font-black tracking-tight text-white">
-            Turn the play into creator media
-          </h2>
-          <p className="mt-2 text-sm font-semibold leading-relaxed text-white/75">
-            Uses past capper content patterns to draft channel-native creative. The capper approves
-            before anything ships.
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2 text-dub-green">
+          <Sparkles className="shrink-0" size={18} />
+          <p className="truncate text-xs font-black uppercase tracking-[0.18em]">
+            AI Agent Layer
           </p>
         </div>
         <span className="shrink-0 rounded-full border border-white/10 bg-black/35 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-white">
           {visibleLabel}
         </span>
       </div>
+      <div className="mt-4 max-w-none">
+        <h2 className="text-[30px] font-black leading-[1.02] tracking-tight text-white">
+          Build media from this play
+        </h2>
+        <p className="mt-3 text-[15px] font-semibold leading-relaxed text-white/75">
+          Choose a clip format, review the draft, then queue the assets you want to use.
+        </p>
+      </div>
 
       <div className="mt-4 rounded-2xl border border-white/10 bg-black/28 p-3">
         <div className="flex items-center gap-3">
-          <CapperAvatar profile={mirroredProfile} size="sm" />
+          <CapperAvatar profile={sourceProfile} size="sm" />
           <div className="min-w-0">
             <p className="truncate text-sm font-black text-white">
-              {mirrorVoice === "original" ? "Original capper voice" : mirroredProfile.name}
+              Source play: {sourceProfile.name}
             </p>
             <p className="truncate text-xs font-bold text-dub-muted">
-              Training signal: past posts, captions, voice notes, and subscriber replies
+              Format reference controls hook, pacing, captions, thumbnail, and CTA pattern
             </p>
           </div>
         </div>
@@ -939,11 +933,11 @@ function AIAgentLayer({
         onSelect={onStyleChange}
       />
       <AgentPicker
-        label="Mirror account"
-        icon={<Users size={15} />}
-        options={mirrorVoices}
-        selected={mirrorVoice}
-        onSelect={onMirrorVoiceChange}
+        label="Clip format"
+        icon={<Clapperboard size={15} />}
+        options={socialClipFormats}
+        selected={clipFormat}
+        onSelect={onClipFormatChange}
       />
 
       {!publishable ? (
@@ -969,7 +963,7 @@ function AIAgentLayer({
             <AgentCreativeCard
               key={option.id}
               option={option}
-              profile={mirroredProfile}
+              profile={sourceProfile}
               play={play}
               disabled={!publishable}
               actioned={completedActions.includes(actionId)}
@@ -998,7 +992,7 @@ function AIAgentLayer({
   );
 }
 
-function AgentPicker<T extends AgentStyle | MirrorVoice>({
+function AgentPicker<T extends AgentStyle | SocialClipFormat>({
   label,
   icon,
   options,
@@ -1317,21 +1311,6 @@ function GrowthSourceCard({
   );
 }
 
-function DoorDashAnalogyCard() {
-  return (
-    <section className="rounded-2xl border border-dub-green/25 bg-dub-green/10 p-4">
-      <div className="mb-2 flex items-center gap-2 text-dub-green">
-        <Lightbulb size={18} />
-        <p className="text-xs font-black uppercase tracking-[0.18em]">Creator OS angle</p>
-      </div>
-      <p className="text-[15px] font-semibold leading-relaxed text-white">
-        Creators need more than a place to post. Growth Studio helps cappers package, distribute,
-        and learn from their signal.
-      </p>
-    </section>
-  );
-}
-
 function HeldDraftWarning({ children }: { children: string }) {
   return (
     <section className="flex gap-3 rounded-2xl border border-dub-amber/45 bg-dub-amber/10 p-4">
@@ -1424,7 +1403,7 @@ function TrustInboxTab({
     <div className="space-y-5">
       <PageIntro
         title="Trust Inbox"
-        subtitle="Show how the subscriber receives and acts on the play."
+        subtitle="Subscriber-ready cards for quick, line-sensitive action."
         chip="Fan-facing trust surface"
       />
       {heldDraft ? (
@@ -1507,8 +1486,8 @@ function TrustActionGuide() {
 
   return (
     <section className="rounded-2xl border border-dub-green/25 bg-dub-green/10 p-4">
-      <p className="text-xs font-black uppercase tracking-[0.18em] text-dub-green">
-        Fan action flow
+        <p className="text-xs font-black uppercase tracking-[0.18em] text-dub-green">
+        Tail flow
       </p>
       <div className="mt-3 grid grid-cols-3 gap-2">
         {steps.map((step, index) => (
@@ -1684,8 +1663,8 @@ function CapperDetailPage({
           )}
         </div>
 
-        <div className="px-5 pb-6 text-center">
-          <div className="-mt-10 flex justify-center">
+        <div className="px-5 pb-6 pt-5 text-center">
+          <div className="flex justify-center">
             <CapperAvatar profile={profile} size="lg" />
           </div>
           <p className="mt-4 text-[11px] font-black uppercase tracking-[0.18em] text-[#787982]">
@@ -1860,9 +1839,9 @@ function InsightsTab({ play }: { play: StructuredPlay | null }) {
         <h3 className="text-lg font-black text-white">Why this matters</h3>
         <div className="mt-4 grid gap-3">
           {[
-            "Structured plays make every channel easier to package.",
-            "Short-form drives discovery while DubClub keeps the paid card trusted.",
-            "Audio and recap assets help cappers build voice without becoming an odds engine."
+            "Structured plays make fan action easier to measure.",
+            "Channel performance shows where each capper grows best.",
+            "Cleaner publishing data improves tailing, recaps, notifications, and coaching."
           ].map((item) => (
             <div key={item} className="flex gap-3">
               <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-dub-green" />
@@ -1870,36 +1849,6 @@ function InsightsTab({ play }: { play: StructuredPlay | null }) {
             </div>
           ))}
         </div>
-      </section>
-
-      <BulletCard
-        icon={<ClipboardCheck size={18} />}
-        title="Tradeoffs I intentionally made"
-        items={[
-          "Avoided live odds infrastructure.",
-          "Avoided sportsbook integrations.",
-          "Avoided automated betting.",
-          "Used mocked data to keep the prototype lightweight.",
-          "Focused upstream on structured publishing because that improves tailing, recaps, notifications, and analytics later."
-        ]}
-      />
-
-      <BulletCard
-        icon={<Lightbulb size={18} />}
-        title="What I would improve next"
-        items={[
-          "Connect to real DubClub publishing channels.",
-          "Add capper-specific voice and templates.",
-          "Add schema validation before publish.",
-          "Add post-game recap generation.",
-          "Connect performance data back into creator coaching.",
-          "Explore integration with existing DubClub AI/analytics surfaces."
-        ]}
-      />
-
-      <section className="rounded-2xl border border-white/10 bg-white p-4 text-center text-sm font-black leading-relaxed text-black">
-        Raw Capper Signal &rarr; Structured Play &rarr; Growth Pack &rarr; Fan Trust Inbox &rarr;
-        Tail Pick &rarr; Performance Insight.
       </section>
     </div>
   );
@@ -1929,33 +1878,6 @@ function ChannelMetricCard({
         />
       </div>
     </article>
-  );
-}
-
-function BulletCard({
-  icon,
-  title,
-  items
-}: {
-  icon: JSX.Element;
-  title: string;
-  items: string[];
-}) {
-  return (
-    <section className="rounded-2xl border border-dub-border bg-dub-card p-4">
-      <div className="flex items-center gap-2 text-dub-green">
-        {icon}
-        <h3 className="text-lg font-black text-white">{title}</h3>
-      </div>
-      <div className="mt-4 space-y-3">
-        {items.map((item) => (
-          <div key={item} className="flex gap-3">
-            <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-dub-green" />
-            <p className="text-sm font-semibold leading-relaxed text-white/82">{item}</p>
-          </div>
-        ))}
-      </div>
-    </section>
   );
 }
 

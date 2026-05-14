@@ -5,8 +5,8 @@ import type {
   CapperProfile,
   GrowthPack,
   InboxPlay,
-  MirrorVoice,
   PlaySource,
+  SocialClipFormat,
   StructuredPlay
 } from "../types";
 
@@ -328,41 +328,66 @@ const agentStyleCopy: Record<
   }
 };
 
-const mirrorVoiceCopy: Record<CapperId, string> = {
-  greeklocks: "confident multi-sport capper voice",
-  propgeekzeke: "math-backed product-demo voice",
-  theparlayplug: "community-first line-sensitive voice",
-  skohty: "high-engagement creator voice"
+const socialFormatCopy: Record<
+  SocialClipFormat,
+  { label: string; reference: string; framing: string; motion: string }
+> = {
+  "face-cam-hook": {
+    label: "Face-cam hook",
+    reference: "Creator opens cold, then the play card snaps in.",
+    framing: "Lead with a direct-to-camera hook before revealing the structured pick.",
+    motion: "Face-cam intro, card overlay, playable-to callout."
+  },
+  "split-screen-breakdown": {
+    label: "Split-screen breakdown",
+    reference: "Capper take on one side, play evidence on the other.",
+    framing: "Use a fast split-screen edit that pairs the capper take with the review card.",
+    motion: "Side-by-side card, matchup cue, risk note slide."
+  },
+  "caption-first": {
+    label: "Caption-first edit",
+    reference: "Large subtitles carry the story even on mute.",
+    framing: "Let bold captions explain the pick, then route serious tailers to DubClub.",
+    motion: "Punchy text stack, jump cuts, green CTA label."
+  },
+  "proof-card-montage": {
+    label: "Proof-card montage",
+    reference: "Rapid proof points before the final card reveal.",
+    framing: "Show unit, playable-to, market, and risk note as a quick proof sequence.",
+    motion: "Four-card montage, final pick lockup, responsible-play tag."
+  },
+  "podcast-clip": {
+    label: "Podcast-style clip",
+    reference: "Audio-led trust clip with waveform and captions.",
+    framing: "Build trust with a calm read and visual captions around the structured play.",
+    motion: "Waveform, caption strip, play card reveal."
+  }
 };
 
 export function generateAgentCreativeOptions(
   play: StructuredPlay,
   style: AgentStyle,
-  mirrorVoice: MirrorVoice
+  clipFormat: SocialClipFormat
 ): AgentCreativeOption[] {
-  const originalProfile = getCapperProfileForPlay(play);
-  const mirroredProfile =
-    mirrorVoice === "original" ? originalProfile : capperProfiles[mirrorVoice];
+  const capperProfile = getCapperProfileForPlay(play);
   const styleCopy = agentStyleCopy[style];
+  const formatCopy = socialFormatCopy[clipFormat];
   const title = play.player ? `${play.player} ${play.pick}` : play.pick;
   const unitLine =
     play.unitSize === "Missing" || play.playableTo === "Missing"
       ? "Details still missing before this can become subscriber-facing."
       : `${play.unitSize}, playable to ${play.playableTo}.`;
-  const voiceLabel =
-    mirrorVoice === "original"
-      ? `${originalProfile.name}'s existing voice`
-      : `${mirroredProfile.name} style - ${mirrorVoiceCopy[mirroredProfile.id]}`;
+  const creativeLabel = `${styleCopy.label} / ${formatCopy.label}`;
 
   return [
     {
       id: "youtube-short",
       channel: "YouTube Shorts",
       title: "YouTube Short Concept",
-      eyebrow: `${styleCopy.label} / ${voiceLabel}`,
+      eyebrow: creativeLabel,
       hook: `${styleCopy.hookLead}: ${play.sport} card is live.`,
-      body: `${title}. ${unitLine} ${styleCopy.direction}`,
-      caption: `${mirroredProfile.handle}: ${title}. Full card, playable range, and risk note inside DubClub.`,
+      body: `${formatCopy.framing} ${title}. ${unitLine} ${styleCopy.direction}`,
+      caption: `${capperProfile.handle}: ${title}. Full card, playable range, and risk note inside DubClub.`,
       cta: "Use This Short",
       doneLabel: "Short selected"
     },
@@ -370,10 +395,10 @@ export function generateAgentCreativeOptions(
       id: "ig-tiktok",
       channel: "IG/TikTok",
       title: "IG/TikTok Cutdown",
-      eyebrow: `${styleCopy.label} / social discovery`,
+      eyebrow: `${formatCopy.label} / social discovery`,
       hook: `${title} in one clean capper take.`,
-      body: `${styleCopy.visual} Caption keeps the play clear and routes serious tailers back to DubClub.`,
-      caption: `${play.sport} play from ${mirroredProfile.name}: ${unitLine} Confirm your number before tailing.`,
+      body: `${formatCopy.motion} Caption keeps the play clear and routes serious tailers back to DubClub.`,
+      caption: `${play.sport} play from ${capperProfile.name}: ${unitLine} Confirm your number before tailing.`,
       cta: "Copy Caption",
       doneLabel: "Caption copied"
     },
@@ -381,9 +406,9 @@ export function generateAgentCreativeOptions(
       id: "audio-read",
       channel: "Audio",
       title: "Audio Trust Read",
-      eyebrow: `${styleCopy.label} / voice note`,
+      eyebrow: `${formatCopy.label} / voice note`,
       hook: "Turn the card into a 30-second trust-building read.",
-      body: `${mirroredProfile.name} opens with the pick, explains the why, then closes with the risk note: ${play.riskFlag}`,
+      body: `${capperProfile.name} opens with the pick, explains the why, then closes with the risk note: ${play.riskFlag}`,
       caption: `${title}. ${unitLine} Voice direction: calm, clear, and capper-approved.`,
       cta: "Save Audio Direction",
       doneLabel: "Audio direction saved"
